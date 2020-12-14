@@ -1,0 +1,150 @@
+*ido.txt*  Completion framework for love and life.
+
+Author:  Shoumodip Kar <shoumodipkar@gmail.com>
+License: Same terms as Vim itself (see 'license')
+
+Ido mode of Emacs brought to Neovim. For those unfamiliar with Emacs,
+ido is essentially a completion framework, like 'fzf'. It's main feature
+is (|imho|) the 'prefix' feature. See below for information on the 'prefix'
+feature.
+
+Just like Ido in Emacs, it is |completely| |extensible|. All the settings
+are in Lua, so it's a simple
+
+  *lua* |varname| *=* 'value'
+
+|ido_fuzzy_matching| - Whether Ido should match fuzzily or not. |True| by
+default.
+
+|ido_case_sensitive| - Whether Ido should match case-sensitively. |False|
+by default.
+
+|ido_min_lines| - The minimum boundary of the Ido minibuffer. Only
+important if 'ido_limit_lines' is |True|. (See below)
+
+|ido_max_lines| - The maximum boundary of the Ido minibuffer. Only has any
+effect if 'ido_limit_lines' is |False|. (See below)
+
+|ido_limit_lines| - If the number of lines in the Ido minibuffer exceeds
+ido_min_lines, whether to show the 'more_items' symbol or make the
+minibuffer 'ido_max_lines' tall. |True| by default.
+
+-----------------------------------------------------------------------------
+
+*ido_decorations* - The fun part, all the Eyecandy. This is a Lua table,
+so all configurations are done in the following format -
+  
+  |lua| |ido_decorations|['item'] = |value|
+
+Available configuration options --
+  
+  |prefixstart| - The character shown before the |prefix|. See below for stuff
+  about the 'prefix'. By default, it is '|[|'.
+
+  |prefixend| - The character shown after the prefix. By default, it is '|]|'.
+
+  |matchstart| - The character shown before the available matches. (if
+any) By default it is ''.
+
+  |matchend| - The character shown after the matches. By default it is ''.
+
+  |separator| - The separator between matches. By default it is ' *|* '.
+
+  |marker| - The indicator for the current item. By default it is ''.
+
+  |moreitems| - The character which denotes there are more matches which are
+not being rendered. Has no effect if |ido_limit_lines| is false. By default
+it is '|...|'.
+
+Example --
+  
+  |lua| |ido_decorations|['separator']  = '\n    '
+  |lua| |ido_decorations|['matchstart'] = '\n'
+  |lua| |ido_decorations|['marker']     = ' -> '
+  |lua| |ido_decorations|['moreitems']  = ''
+
+  This will create a vertical layout for Ido --
+
+  *Files:* d|[o]|
+      |->| documents
+         downloads
+
+-----------------------------------------------------------------------------
+
+*prefix* - The most awesome feature in existence. When using Ido, it will
+provide the least common prefix substring as a |suggestion|. Pressing <Tab>
+will do what you expect - tab completion! If there is only item as a match,
+the entire match will become the prefix and on pressing <Tab>, it will
+complete the prefix and accept the item like <Return>.
+
+    *Find* *files:* d|[o]| {documents | downloads}
+
+Here |[o]| is the prefix being suggested as the substring |do| is present at
+the beginning of the all the available matches.
+
+    *>>>* mus|[music]|
+
+Here |[music]| is the only available match. Therefore the entire item is the
+suggestion.
+
+-----------------------------------------------------------------------------
+
+*keys* - The hotkeys used.
+
+<C-n>    The next item
+<C-p>    The previous item
+
+<C-f>    Forward a character
+<C-b>    Backward a character
+
+<Right>  Forward a character
+<Left>   Backward a character
+
+<Tab>    Prefix completion
+<Return> Accept the selected item, else accept the pattern text
+<Escape> Escape Ido, duh.
+
+-----------------------------------------------------------------------------
+
+How to use Ido.
+
+  *ido_completing_read* is a lua function which takes two arguments --
+
+    |PROMPT| The prompt used. To use the default prompt ('>>>'), set it to
+             |nil|. To use an empty prompt, set it to "". To use a different
+             prompt, set it to a different prompt.
+
+    |ITEMS|  The table of items to be matched against.
+
+  For example --
+
+    |lua| |print(ido_completing_read(|'Select: ', {'red', 'green', 'yellow', 'blue', 'magenta'}|))|
+
+  Or --
+
+    |lua| |print(ido_completing_read(|'Find files: ', vim.fn.systemlist('ls -A ~')|))|
+
+  For a more "complex" example, check out |find_files()| in *menus.lua*
+
+-----------------------------------------------------------------------------
+
+*colors* - These are the highlight groups used in Ido.
+Note: These are adjusted to the color settings of *my* terminal configuration.
+To make Ido look normal in yours, you need to change some color settings.
+
+|IdoCursor| The virtual cursor emulation used in Ido.
+
+|IdoStatus| The status highlight of Ido. Ideally the foreground of this
+should be set to the terminal background color and the background of this
+should be set the terminal cursor color.
+
+|IdoSelectedMatch| The color for the selected match.
+
+|IdoPrefix| The color used for the prefix.
+
+|IdoSeparator| The color used for the separator, the match start character
+and the match end character.
+
+|IdoPrompt| The color used for the prompt.
+
+ vim:tw=78:et:ft=help
