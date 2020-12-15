@@ -73,11 +73,10 @@ local function ido_open_window()
 
   -- Calculate our floating window size and starting position
   local win_height = ido_min_lines
-  local row        = api.nvim_win_get_position(0)[1] +
-  api.nvim_win_get_height(0) - win_height + 1
+  local row        = vim.o.lines + 1
 
-  local col        = api.nvim_win_get_position(0)[2]
-  win_width        = api.nvim_win_get_width(0)
+  local col        = 0
+  win_width        = vim.o.columns
 
   -- Set some options
   local win_options = {
@@ -93,10 +92,6 @@ local function ido_open_window()
   ido_window = api.nvim_open_win(ido_buffer, true, win_options)
   vim.wo.winhl = 'Normal:CursorLine'
   vim.wo.wrap = false
-  vim.wo.number = false
-  vim.wo.relativenumber = false
-  vim.wo.cursorline = false
-  vim.wo.cursorcolumn = false
 
   cursor_position = 1
   before_cursor, after_cursor, pattern, current_item, prefix, prefix_text = '', '', '', '', '', ''
