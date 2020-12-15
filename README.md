@@ -37,8 +37,6 @@ Most probably, Ido will look horrible on your terminal. The reason being Ido use
 
 `IdoCursor` The virtual cursor emulation used in Ido.
 
-`IdoStatus` The status highlight of Ido. Ideally the foreground of this should be set to the terminal background color and the background of this should be set the terminal cursor color.
-
 `IdoSelectedMatch` The color for the selected match.
 
 `IdoPrefix` The color used for the prefix.
