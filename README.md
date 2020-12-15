@@ -100,7 +100,7 @@ This will create a vertical layout for Ido --
 
     Find files: d[o] {documents | downloads}
 
-Here `[o]` is the prefix being suggested as the substring `do` is present at the beginning of the all the available matches.
+Here `[o]` is the prefix being suggested as the substring `do` is present at the beginning of all the available matches.
 
     >>> mus[music]
 
