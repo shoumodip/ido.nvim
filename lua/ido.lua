@@ -180,7 +180,7 @@ local function ido_get_matches()
     prefix = ''
     prefix_text = prefix
   end
-  
+
   if #ido_matched_items > 0 then
     for _, v in pairs(ido_matched_items) do
       table.insert(ido_true_matched_items, v)
@@ -345,7 +345,7 @@ local function ido_render_colors()
 
   fn.matchadd('IdoPrompt', '\\%1l\\%1c.*\\%' .. ido_prompt:len() .. 'c')
   fn.matchadd('IdoSeparator', '\\M' .. ido_decorations["separator"])
-  
+
   if prefix ~= '' then
     local prefix_start =
     string.len(ido_prompt .. pattern .. ido_decorations['prefixstart'])
@@ -451,7 +451,7 @@ local function ido_render()
   end
 
   if #ido_matched_items > 0 then
-    matched_text = 
+    matched_text =
     ido_decorations['matchstart'] .. ido_decorations['marker'] ..
     render_text .. ido_decorations['matchend']
   else
@@ -533,17 +533,23 @@ local function handle_keys()
 end
 -- }}}
 -- Completing read -{{{
-function ido_completing_read(prompt, list)
-  ido_match_list = table.unique(list)
-  if prompt:gsub('\n', '') ~= nil then
-    ido_prompt = prompt:gsub('\n', '')
+function ido_complete(opts)
+  opts = opts or {}
+  ido_match_list = table.unique(opts.items)
+  if opts.prompt:gsub('\n', '') ~= nil then
+    ido_prompt = opts.prompt:gsub('\n', '') .. '  '
   end
 
   ido_open_window()
   ido_get_matches()
-
   ido_render()
-  return handle_keys()
+
+  local selection = handle_keys()
+  if opts.on_enter then
+    return opts.on_enter(selection)
+  else
+    return selection
+  end
 end
 -- }}}
 -- Init -{{{

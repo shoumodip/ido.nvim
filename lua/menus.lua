@@ -3,20 +3,35 @@ local api = vim.api
 local fn = vim.fn
 
 -- Find files -{{{
-function ido_find_files(dirname)
-  dirname = dirname and dirname or vim.loop.cwd()
+-- ido_find_files{
+--   cwd = "~/.config/nvim",
+--   prompt = "Vim:",
+-- }
+function ido_find_files(opts)
+  opts = opts or {}
+  opts.cwd = opts.cwd or vim.loop.cwd()
+  opts.prompt = opts.prompt or string.format(
+    "Find files (%s):",
+    string.gsub(
+      vim.fn.resolve(opts.cwd), '^' ..
+      os.getenv('HOME'), '~'
+  ))
 
-  local user_input = ido_completing_read("Find files (" ..
-  string.gsub(vim.fn.resolve(dirname), '^' .. os.getenv('HOME'), '~') ..
-  "): ", fn.systemlist('ls -a ' .. dirname))
-
-  local possible_dirname = dirname .. '/' .. user_input
-  if user_input ~= '' then
-    if os.execute('test -d "' .. possible_dirname .. '"') == 0 then
-      ido_find_files(possible_dirname)
-    else
-      api.nvim_command('edit ' .. possible_dirname)
+  return ido_complete {
+    prompt = opts.prompt,
+    items = vim.fn.systemlist('ls -a ' .. opts.cwd),
+    on_enter = function(s)
+      if s ~= '' then
+        s = opts.cwd .. '/' .. s
+        if vim.fn.isdirectory(vim.fn.expand(s)) == 1 then
+          return ido_find_files{ cwd = s, prompt = opts.prompt }
+          -- TODO: find alternative way to referesh ido items and prompts.
+        else
+          return vim.cmd('edit ' .. s)
+        end
+      end
     end
-  end
+  }
+
 end
 -- }}}
