@@ -115,6 +115,9 @@ Here `[music]` is the only available match. Therefore the entire item is the sug
 `<C-f>`    Forward a character\
 `<C-b>`    Backward a character
 
+`<C-a>`    Start of line\
+`<C-e>`    End of line
+
 `<Right>`  Forward a character\
 `<Left>`   Backward a character
 
