@@ -29,6 +29,7 @@ local more_items = false
 ido_fuzzy_matching = true
 ido_case_sensitive = false
 ido_limit_lines = true
+ido_overlap_statusline = false
 
 ido_decorations = {
   prefixstart     = '[',
@@ -71,9 +72,9 @@ local function ido_open_window()
   ido_buffer = api.nvim_create_buf(false, true) -- Create new empty buffer
   vim.b.bufhidden='wipe'
 
-  -- Calculate our floating window size and starting position
+  -- Calculate the Ido window size and starting position
   local win_height = ido_min_lines
-  local row        = vim.o.lines + 1
+  local row        = vim.o.lines - win_height - 2 + (ido_overlap_statusline and 1 or 0)
 
   local col        = 0
   win_width        = vim.o.columns
@@ -90,7 +91,7 @@ local function ido_open_window()
 
   -- And finally create it with buffer attached
   ido_window = api.nvim_open_win(ido_buffer, true, win_options)
-  vim.wo.winhl = 'Normal:CursorLine'
+  vim.wo.winhl = 'Normal:IdoWindow'
   vim.wo.wrap = false
 
   cursor_position = 1
@@ -557,4 +558,5 @@ api.nvim_command('hi! IdoSelectedMatch  guifg=#95a99f')
 api.nvim_command('hi! IdoPrefix         guifg=#9e95c7')
 api.nvim_command('hi! IdoSeparator      guifg=#635a5f')
 api.nvim_command('hi! IdoPrompt         guifg=#96a6c8')
+api.nvim_command('hi! IdoWindow         guibg=#202020')
 -- }}}

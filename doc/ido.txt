@@ -19,6 +19,9 @@ default.
 |ido_case_sensitive| - Whether Ido should match case-sensitively. |False|
 by default.
 
+|ido_overlap_statusline| - Whether the Ido floating window should overlap the
+statusline or not. |False| by default.
+
 |ido_min_lines| - The minimum boundary of the Ido minibuffer. Only
 important if 'ido_limit_lines' is |True|. (See below)
 
@@ -134,6 +137,8 @@ How to use Ido.
 *ido_colors* - These are the highlight groups used in Ido.
 Note: These are adjusted to the color settings of |my| terminal configuration.
 To make Ido look normal in yours, you need to change some color settings.
+
+|IdoWindow| The highlight color of the Ido window.
 
 |IdoCursor| The virtual cursor emulation used in Ido.
 
