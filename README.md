@@ -29,7 +29,7 @@ Or --
 print(ido_completing_read('Find files: ', vim.fn.systemlist('ls -A ~')))
 ```
 
-For a more "complex" example, check out `find_files()` in *menus.lua*. (Bound to `<Leader>.`)
+For a more "complex" example, check out `ido_find_files()` in *menus.lua*. (Bound to `<Leader>.`)
 ***Note:*** These are lua functions. So when calling these from a VimL file, you need to put the `lua` keyword at the beginning.
 
 # Colors

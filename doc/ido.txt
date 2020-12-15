@@ -124,7 +124,7 @@ How to use Ido.
 
     |lua| |print(ido_completing_read(|'Find files: ', vim.fn.systemlist('ls -A ~')|))|
 
-  For a more "complex" example, check out |find_files()| in *menus.lua*
+  For a more "complex" example, check out |ido_find_files()| in *menus.lua*
 
 -----------------------------------------------------------------------------
 

@@ -1,14 +1,11 @@
 require "ido"
+local api = vim.api
+local fn = vim.fn
 
 -- Find files -{{{
-function find_files(dirname)
-  if dirname == nil then
-    if vim.fn.expand('%:p') == '' then
-      dirname = fn.eval('$PWD')
-    else
-      dirname = vim.fn.expand('%:p:h')
-    end
-  end
+function ido_find_files(dirname)
+  dirname = dirname and dirname or vim.loop.cwd()
+
   local user_input = ido_completing_read("Find files (" ..
   string.gsub(vim.fn.resolve(dirname), '^' .. os.getenv('HOME'), '~') ..
   "): ", fn.systemlist('ls -a ' .. dirname))

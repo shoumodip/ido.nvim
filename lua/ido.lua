@@ -3,8 +3,8 @@ require "utils/tables"
 require "utils/strings"
 -- }}}
 -- Helper variables -{{{
-api = vim.api
-fn = vim.fn
+local api = vim.api
+local fn = vim.fn
 -- }}}
 -- Variables -{{{
 local ido_matched_items = {}
@@ -74,7 +74,7 @@ local function ido_open_window()
 
   -- Calculate our floating window size and starting position
   local win_height = ido_min_lines
-  local row        = vim.fn.winheight(0) - win_height
+  local row        = vim.o.lines - win_height + 1
   local col        = 0
   win_width        = vim.fn.winwidth(0)
 
