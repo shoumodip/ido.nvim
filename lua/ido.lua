@@ -10,7 +10,6 @@ local fn = vim.fn
 local ido_matched_items = {}
 local ido_match_list = {}
 local ido_window, ido_buffer
-local ido_history_file = os.getenv('XDG_CACHE_HOME') .. '/.nvim_ido_hist'
 
 local before_cursor, after_cursor, pattern = '', '', ''
 local prefix, current_item, prefix_text = '', '', ''
@@ -553,7 +552,6 @@ end
 -- }}}
 -- Init -{{{
 api.nvim_command('hi! IdoCursor         guifg=#161616 guibg=#cc8c3c')
-api.nvim_command('hi! IdoStatus         guifg=#161616 guibg=#cc8c3c gui=bold')
 api.nvim_command('hi! IdoSelectedMatch  guifg=#95a99f')
 api.nvim_command('hi! IdoPrefix         guifg=#9e95c7')
 api.nvim_command('hi! IdoSeparator      guifg=#635a5f')
