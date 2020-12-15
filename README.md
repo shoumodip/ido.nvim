@@ -55,6 +55,8 @@ lua VARNAME = VALUE
 
 `ido_case_senstive` (**Boolean**) Whether Ido should match case-senstively or not. Set to `false` by default.
 
+`ido_overlap_statusline` (**Boolean**) Whether the Ido floating window should overlap the statusline or not. Set to `false` by default.
+
 `ido_min_lines` (**Number**) The minimum boundary of the Ido minibuffer. Only important if `ido_limit_lines` is `true`.
 
 `ido_max_lines` (**Number**) The maximum boundary of the Ido minibuffer. Only has any effect if `ido_limit_lines` is `false`.
