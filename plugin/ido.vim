@@ -4,7 +4,7 @@ let s:save_cpo = &cpo " Save user coptions
 set cpo&vim           " Reset them to defaults
 
 lua require "menus"
-nnoremap <silent> <Leader>. :lua find_files()<CR>
+nnoremap <silent> <Leader>. :lua ido_find_files()<CR>
 
 let &cpo = s:save_cpo " And restore after
 unlet s:save_cpo
