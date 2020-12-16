@@ -36,7 +36,7 @@ print(ido_complete({items = {'red', 'green', 'blue'}}))
 Maybe a custom function.
 
 ```lua
-print(ido_complete({items = {'red', 'green', 'blue'}, on_enter = function(s) print(s) end}))
+ido_complete({items = {'red', 'green', 'blue'}, on_enter = function(s) print(s) end})
 ```
 
 Particular order does not matter here. The options can be placed in whatsoever way you want. There is no specification on whether prompt should be placed at the first or something like that.
@@ -167,7 +167,7 @@ ido_keybindings = {
 These are keybindings used in only one instance of Ido, and are defined in the table of options supplied to `ido_complete`.
 
 ```lua
-ido_complete({items = {'red', 'green', 'blue'}, keybinds = {["\\<Right>"] = 'ido_cursor_move_end'}})
+print(ido_complete({items = {'red', 'green', 'blue'}, keybinds = {["\\<Right>"] = 'ido_cursor_move_end'}}))
 ```
 
 ## Variables
