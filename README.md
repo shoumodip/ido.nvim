@@ -152,7 +152,7 @@ where `KEYNAME` is the key binding in standard vim notation (see `key-notation`)
 And `FUNCTION` is a global Lua function, emphasis on global. I could'nt find a way to make it work with local functions, so unless you have a solution and create a pull request, global functions it is. Also the functions must ***not*** have the `'(<args>)'` part. There can be no parenthesis at the end used for calling a function.
 
 ### Global
-These are the keybindings used in every single instance of Ido. This is set in the `ido_keybindings` table. For example this is something a pshycopath would put in the keybindings.
+These are the keybindings used in every single instance of Ido. This is set in the `ido_keybindings` table. For example this is something a psychopath would put in the keybindings.
 
 ```lua
 ido_keybindings = {
