@@ -1,7 +1,7 @@
 *ido.txt*  Completion framework for love and life.
 
 Author:  Shoumodip Kar <shoumodipkar@gmail.com>
-License: Same terms as Vim itself (see 'license')
+License: MIT
 
 Ido mode of Emacs brought to Neovim. For those unfamiliar with Emacs,
 ido is essentially a completion framework, like 'fzf'. It's main feature
@@ -13,22 +13,22 @@ are in Lua, so it's a simple
 
   |lua| |varname| = 'value'
 
-|ido_fuzzy_matching| - Whether Ido should match fuzzily or not. |True| by
+*ido_fuzzy_matching* - Whether Ido should match fuzzily or not. |True| by
 default.
 
-|ido_case_sensitive| - Whether Ido should match case-sensitively. |False|
+*ido_case_sensitive* - Whether Ido should match case-sensitively. |False|
 by default.
 
-|ido_overlap_statusline| - Whether the Ido floating window should overlap the
+*ido_overlap_statusline* - Whether the Ido floating window should overlap the
 statusline or not. |False| by default.
 
-|ido_min_lines| - The minimum boundary of the Ido minibuffer. Only
+*ido_min_lines* - The minimum boundary of the Ido minibuffer. Only
 important if 'ido_limit_lines' is |True|. (See below)
 
-|ido_max_lines| - The maximum boundary of the Ido minibuffer. Only has any
+*ido_max_lines* - The maximum boundary of the Ido minibuffer. Only has any
 effect if 'ido_limit_lines' is |False|. (See below)
 
-|ido_limit_lines| - If the number of lines in the Ido minibuffer exceeds
+*ido_limit_lines* - If the number of lines in the Ido minibuffer exceeds
 ido_min_lines, whether to show the 'more_items' symbol or make the
 minibuffer 'ido_max_lines' tall. |True| by default.
 
@@ -36,11 +36,11 @@ minibuffer 'ido_max_lines' tall. |True| by default.
 
 *ido_decorations* - The fun part, all the Eyecandy. This is a Lua table,
 so all configurations are done in the following format -
-  
+
   |lua| |ido_decorations|['item'] = |value|
 
 Available configuration options --
-  
+
   |prefixstart| - The character shown before the |prefix|. See below for stuff
   about the 'prefix'. By default, it is '|[|'.
 
@@ -60,7 +60,7 @@ not being rendered. Has no effect if |ido_limit_lines| is false. By default
 it is '|...|'.
 
 Example --
-  
+
   |lua| |ido_decorations|['separator']  = '\n    '
   |lua| |ido_decorations|['matchstart'] = '\n'
   |lua| |ido_decorations|['marker']     = ' -> '
@@ -93,6 +93,7 @@ suggestion.
 -----------------------------------------------------------------------------
 
 *ido_keys* - The hotkeys used.
+These are declared in |ido_keybindings|. See 'ido-api' for more information.
 
 <C-n>    The next item
 <C-p>    The previous item
@@ -114,21 +115,32 @@ suggestion.
 
 How to use Ido.
 
-  *ido_completing_read* is a lua function which takes two arguments --
+  *ido_complete* is a lua function which takes a table as an argument. The
+table can contain four items / subtables --
 
-    |PROMPT| The prompt used. To use the default prompt ('>>>'), set it to
-             |nil|. To use an empty prompt, set it to "". To use a different
-             prompt, set it to a different prompt.
+  |prompt| The prompt to be used. If left blank, then |ido_default_prompt|
+will be used.
 
-    |ITEMS|  The table of items to be matched against.
+  |items| The list of items to match on.
 
-  For example --
+  |keybinds| Custom keybindings to be used. If left default, then
+  ido_keybindings will be used.
 
-    |lua| |print(ido_completing_read(|'Select: ', {'red', 'green', 'yellow', 'blue', 'magenta'}|))|
+  |on_enter| The function which will be executed on returning the value.
 
-  Or --
+  For example.
+  |lua| |print(ido_complete({|prompt = 'Choose: ', items = {'red', 'green', 'blue'}|}))|
 
-    |lua| |print(ido_completing_read(|'Find files: ', vim.fn.systemlist('ls -A ~')|))|
+  Or just use the default prompt.
+  |lua| |print(ido_complete({|items = {'red', 'green', 'blue'}|}))|
+
+  Maybe a custom function.
+
+  |lua| |print(ido_complete({|items = {'red', 'green', 'blue'}, on_enter = function(s) print(s) end|}))|
+
+  Note: Particular order does not matter here. The options can be placed in
+  whatsoever way you want. There is no specification on whether prompt should
+  be placed at the first or something like that.
 
   For a more "complex" example, check out |ido_find_files()| in |menus.lua|
 
@@ -150,5 +162,122 @@ To make Ido look normal in yours, you need to change some color settings.
 and the match end character.
 
 |IdoPrompt| The color used for the prompt.
+
+-----------------------------------------------------------------------------
+
+*ido-api* Ido mode was originally from Emacsland. Therefore not provinding an
+API would be sacriligeous. Since Ido mode is near enough infinitely
+extensible, therefore this is divided into 3 parts.
+
+-----------------------------------------------------------------------------
+
+|Keybindings| It is divided into two parts -- the global keybindings and the
+temporary keybindings.
+
+Keybindings consist of the following pattern --
+  ["|KEYNAME|"] = '|FUNCTION|'
+
+  where |KEYNAME| is the key binding in standard vim notation (see
+  'key-notation').
+
+  And |FUNCTION| is a global Lua function, emphasis on global. I could'nt find
+  a way to make it work with local functions, so unless you have a solution
+  and create a pull request, global functions it is. Also the functions must
+  not have the '(|<args>|)' part. There can be no parenthesis at the end used
+  for calling a function.
+
+  |global| These are the keybindings used in every single instance of Ido.
+  This is set in the |ido_keybindings| table.
+
+    |ido_keybindings| = {
+      ["\\<Right>"] = 'ido_cursor_move_begin',
+      ["\\<Left>"]  = 'ido_cursor_move_end',
+    }
+
+  NOTE: After changing the global keybindings, you have to execute the
+  |ido_load_keys()| lua function in order to, you know, load the keys.
+  Otherwise they won't take effect.
+
+  |temporary| These are keybindings used in only one instance of Ido, and are
+  defined in the table of options supplied to |ido_complete|.
+
+    |ido_complete({|items = {'red', 'green', 'blue'}, keybinds = {["\\<Right>"] = 'ido_cursor_move_end'}|})|
+
+-----------------------------------------------------------------------------
+
+|Variables| The variables used in Ido mode --
+
+  *ido_matched_items* The table of the items matched.
+
+  *ido_window* The floating window belonging to Ido.
+
+  *ido_buffer* The buffer used by Ido.
+
+  *ido_before_cursor* The text present before the virtual cursor position in Ido.
+
+  *ido_after_cursor* The text present after the virtual cursor position in Ido.
+
+  *ido_prefix* The prefix
+
+  *ido_prefix_text* The complete prefix, containing the pattern and the prefix.
+
+  *ido_current_item* The current selected item in Ido.
+
+  *ido_render_text* The text being rendered in Ido.
+
+  *ido_default_prompt* The default prompt of Ido. ('>>> ')
+
+  *ido_cursor_position* The virtual cursor position of Ido.
+
+  *ido_more_items* Whether there are more items which are not being rendered.
+
+  *ido_pattern_text* The pattern being matched in the items.
+
+  *ido_match_list* The list of items on which the pattern is being matched.
+
+  *ido_prompt* The prompt being used.
+
+-----------------------------------------------------------------------------
+
+|Functions| The functions defined in Ido are --
+
+  *ido_close_window* Close the Ido window and stop the character input loop.
+
+  *ido_get_matches* Get the items which match with the pattern. Also find out
+  the prefix.
+
+  *ido_insert_char* Insert the character you last pressed. Does |not| take any
+  argument.
+
+  *ido_key_backspace* Emulate the backspace key in Ido.
+
+  *ido_key_delete* Emulate the delete key in Ido.
+
+  *ido_cursor_move_left* Move the virtual cursor left a character.
+
+  *ido_cursor_move_right* Move the virtual cursor right a character.
+
+  *ido_cursor_move_begin* Move the virtual cursor to the beginning of the
+  pattern.
+
+  *ido_cursor_move_end* Move the virtual cursor to the endning of the
+  pattern.
+
+  *ido_next_item* Select the next match.
+
+  *ido_prev_item* Select the previous match.
+
+  *ido_complete_prefix* Complete the prefix.
+
+-----------------------------------------------------------------------------
+
+|Special| |Functions| The functions which aren't really functions but are
+recognised by Ido by an 'if-else' statement. Meant to be used |only| in
+keybindings. I repeat, "Do not try to use this in your function or whatever!"
+
+  *ido_accept* Accept the current item.
+
+  *ido_complete_prefix* Complete the prefix. If there is only one matching
+  item, then behaves the same as |ido_accept|.
 
  vim:tw=78:et:ft=help
