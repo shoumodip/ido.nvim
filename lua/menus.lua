@@ -36,7 +36,7 @@ function ido_find_files_backspace()
     directory_name = fn.fnamemodify(directory_name, ':h')
 
     ido_find_files_set_prompt()
-    ido_match_list = fn.systemlist('ls -a ' .. directory_name)
+    ido_match_list = fn.systemlist('ls -A ' .. directory_name)
     ido_get_matches()
   else
     ido_key_backspace()
