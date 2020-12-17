@@ -498,6 +498,9 @@ end
 local function handle_keys()
   while ido_looping do
     key_pressed = fn.getchar()
+    -- NOTE: Why not map and unmap keys on ido.nvim enter.
+    -- This will skip the cursor from jumping to command line prompt space.
+    -- Also wouldn't need to deal with the complexity below.
 
     if fn.char2nr(key_pressed) == 128 then
       key_pressed_action = ido_hotkeys[key_pressed] and ido_hotkeys[key_pressed] or fn.nr2char(key_pressed)
