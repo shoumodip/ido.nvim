@@ -77,6 +77,10 @@ lua VARNAME = VALUE
 
 `ido_limit_lines` (**Boolean**) If the number of lines in the Ido minibuffer exceeds `ido_min_lines`, decides whether to show the `more_items` symbol or make the minibuffer `ido_max_lines` tall. `true` by default.
 
+`ido_minimal_mode` (**Boolean**) If set to `true`, Ido will be rendered in command mode (`:`), and the `ido_{min, max, limit}_lines` will have no effect. If set to `false`, Ido will be rendered in a floating window, and the afforementioned variables will have effect if needed. `false` by default.
+
+![Minimal mode](img/ido_minimal.png)
+
 # Ido Decorations
 The various symbolifiers of Ido, like match separator, prefix start, etc. This is a lua dictionary so `lua ido_decorations[ITEM] = VALUE`, where `ITEM` is one of the following --
 

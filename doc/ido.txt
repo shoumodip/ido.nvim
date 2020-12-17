@@ -32,6 +32,11 @@ effect if 'ido_limit_lines' is |False|. (See below)
 ido_min_lines, whether to show the 'more_items' symbol or make the
 minibuffer 'ido_max_lines' tall. |True| by default.
 
+*ido_minimal_mode* - If set to |True|, Ido will be rendered in command mode
+(|:|), and the `ido_{min, max, limit}_lines` will have no effect. If set to
+|False|, Ido will be rendered in a floating window, and the afforementioned
+variables will have effect if needed. |False| by default.
+
 -----------------------------------------------------------------------------
 
 *ido_decorations* - The fun part, all the Eyecandy. This is a Lua table,
@@ -217,7 +222,7 @@ Keybindings consist of the following pattern --
 
   *ido_after_cursor* The text present after the virtual cursor position in Ido.
 
-  *ido_prefix* The prefix
+  `ido_prefix` The prefix
 
   *ido_prefix_text* The complete prefix, containing the pattern and the prefix.
 
@@ -267,7 +272,7 @@ Keybindings consist of the following pattern --
 
   *ido_prev_item* Select the previous match.
 
-  *ido_complete_prefix* Complete the prefix.
+  `ido_complete_prefix` Complete the prefix.
 
 -----------------------------------------------------------------------------
 

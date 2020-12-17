@@ -10,6 +10,9 @@ local fn = vim.fn
 local key_pressed = ''
 local win_width
 local render_list = {}
+local minimal_text_length = 0
+local minimal_text = ''
+local minimal_end_reached = false
 
 ido_matched_items = {}
 ido_window, ido_buffer = 0, 0
@@ -33,14 +36,15 @@ ido_fuzzy_matching = true
 ido_case_sensitive = false
 ido_limit_lines = true
 ido_overlap_statusline = false
+ido_minimal_mode = false
 
 ido_decorations = {
   prefixstart     = '[',
   prefixend       = ']',
 
-  matchstart      = '',
+  matchstart      = '{',
   separator       = ' | ',
-  matchend        = '',
+  matchend        = '}',
 
   marker          = '',
   moreitems       = '...'
@@ -95,7 +99,6 @@ local function ido_open_window()
   local row        = vim.o.lines - win_height - 2 + (ido_overlap_statusline and 1 or 0)
 
   local col        = 0
-  win_width        = vim.o.columns
 
   -- Set some options
   local win_options = {
@@ -112,18 +115,13 @@ local function ido_open_window()
   vim.wo.winhl = 'Normal:IdoWindow'
   vim.wo.wrap = false
 
-  ido_cursor_position = 1
-  ido_before_cursor, ido_after_cursor, ido_pattern_text, ido_current_item, ido_prefix, ido_prefix_text = '', '', '', '', '', ''
-  ido_matched_items = {}
-  looping = true
-
   return ''
 end
 -- }}}
 -- Close the window -{{{
 function ido_close_window()
   ido_prompt = ido_default_prompt
-  api.nvim_command('bdelete!')
+  api.nvim_command('echo "" | bdelete!')
   ido_looping = false
   return ''
 end
@@ -376,7 +374,7 @@ local function ido_render_colors()
     string.len(ido_prompt .. ido_pattern_text .. ido_decorations['prefixstart']
     .. ido_prefix .. ido_decorations['prefixend'])
 
-    fn.matchadd('Idoido_Prefix',
+    fn.matchadd('IdoPrefix',
     '\\%1l\\%' ..  ido_prefix_start .. 'c.*\\%1l\\%' ..  ido_prefix_end + 2 .. 'c')
   end
 
@@ -494,10 +492,109 @@ local function ido_render()
   api.nvim_command('redraw!')
 end
 -- }}}
+-- Print the text in minimal mode -{{{
+local function ido_minimal_print(text, end_char)
+  minimal_text_length = minimal_text_length + text:len()
+  end_char = end_char and end_char or ''
+  local text_to_print = ''
+
+  if minimal_text_length <= win_width and not minimal_end_reached then
+    text_to_print = string.sub(minimal_text .. text,
+    minimal_text:len() + 1,
+    win_width - string.len(
+    ido_decorations["moreitems"]:gsub('\n', '') ..
+    ido_decorations["matchend"]:gsub('\n', ''))
+    - 2)
+
+    minimal_text = minimal_text .. text_to_print
+    api.nvim_command('echon "' .. text_to_print .. '"')
+  end
+
+  if minimal_text_length > win_width and not minimal_end_reached then
+    api.nvim_command('echohl IdoSeparator')
+    api.nvim_command('echon " ' .. ido_decorations["moreitems"]:gsub('\n', '') .. '"')
+    api.nvim_command('echon "' .. end_char:gsub('\n', '') .. '"')
+    api.nvim_command('echohl IdoNormal')
+    minimal_end_reached = true
+  end
+end
+-- }}}
+-- Render Ido in minimal mode -{{{
+local function ido_minimal_render()
+  local ido_prefix_text, matched_text
+  minimal_text = ''
+  minimal_end_reached = false
+  minimal_text_length = string.len(ido_decorations["moreitems"]:gsub('\n', '')
+  .. ido_decorations["matchend"]:gsub('\n', '')) + 1
+
+  api.nvim_command('echohl IdoPrompt')
+  ido_minimal_print(ido_prompt)
+  api.nvim_command('echohl IdoNormal')
+
+  if ido_before_cursor:len() > 0 then
+    ido_minimal_print(ido_before_cursor)
+  end
+
+  api.nvim_command('echohl IdoCursor')
+  if ido_after_cursor == '' then
+    ido_minimal_print(' ')
+  else
+    ido_minimal_print(ido_after_cursor:sub(1, 1))
+  end
+  api.nvim_command('echohl IdoNormal')
+
+  ido_minimal_print(ido_after_cursor:sub(2, -1))
+
+  if ido_prefix:len() > 0 then
+    api.nvim_command('echohl IdoPrefix')
+    ido_minimal_print(ido_decorations['prefixstart']:gsub('\n', ''))
+    ido_minimal_print(ido_prefix)
+    ido_minimal_print(ido_decorations['prefixend']:gsub('\n', ''))
+    api.nvim_command('echohl IdoNormal')
+  end
+
+  if #ido_matched_items > 0 then
+    api.nvim_command('echohl IdoSeparator')
+    ido_minimal_print(ido_decorations["matchstart"], '}')
+    api.nvim_command('echohl IdoNormal')
+  end
+
+  for k, v in pairs(ido_matched_items) do
+
+    -- if minimal_text_length > win_width then break end
+
+    if k == 1 then api.nvim_command('echohl IdoSelectedMatch') end
+    ido_minimal_print(v, '}')
+
+    if ido_matched_items[k + 1] ~= nil and minimal_text_length <= win_width then
+      api.nvim_command('echohl IdoSeparator')
+      ido_minimal_print(ido_decorations["separator"], '}')
+      api.nvim_command('echohl IdoNormal')
+    end
+
+  end
+
+  if #ido_matched_items > 0 then
+    api.nvim_command('echohl IdoSeparator')
+    ido_minimal_print(ido_decorations["matchend"], '}')
+    api.nvim_command('echohl IdoNormal')
+  end
+
+  api.nvim_command('redraw')
+end
+-- }}}
 -- Handle key presses -{{{
 local function handle_keys()
   while ido_looping do
     key_pressed = fn.getchar()
+    -- I really want Ido to 'return' a value when Enter is pressed so stuff like
+    --
+    -- print(ido_complete({items = {'red', 'green', 'blue'}}) .. ' is my color')
+    --
+    -- is possible. I know the 'on_enter' option exists, but at the end of the
+    -- day, I mostly use temporary Ido functions to achieve my tasks, and the
+    -- return feature is a blessing. Therefore I deal with this complexity
+    -- below, as this is more of a personal preference.
 
     if fn.char2nr(key_pressed) == 128 then
       key_pressed_action = ido_hotkeys[key_pressed] and ido_hotkeys[key_pressed] or fn.nr2char(key_pressed)
@@ -541,7 +638,11 @@ local function handle_keys()
       return current_item
     end
 
-    ido_render()
+    if ido_minimal_mode then
+      ido_minimal_render()
+    else
+      ido_render()
+    end
   end
 end
 -- }}}
@@ -551,11 +652,29 @@ function ido_complete(opts)
   ido_match_list = table.unique(opts.items)
   ido_prompt = opts.prompt and opts.prompt:gsub('\n', '') .. ' ' or ido_default_prompt
 
+  ido_cursor_position = 1
+  ido_before_cursor, ido_after_cursor, ido_pattern_text, ido_current_item, ido_prefix, ido_prefix_text = '', '', '', '', '', ''
+  ido_matched_items = {}
+  looping = true
+  win_width = vim.o.columns
+
+  local laststatus = vim.o.laststatus
+
   if opts.keybinds ~= nil then ido_map_keys(opts.keybinds) end
 
-  ido_open_window()
+  if ido_minimal_mode then
+    vim.o.laststatus = 2
+  else
+    ido_open_window()
+  end
+
   ido_get_matches()
-  ido_render()
+
+  if ido_minimal_mode then
+    ido_minimal_render()
+  else
+    ido_render()
+  end
 
   local selection = handle_keys()
 
@@ -567,6 +686,10 @@ function ido_complete(opts)
   ido_prompt = ido_default_prompt
   ido_looping = true
 
+  if ido_minimal_mode then
+    vim.o.laststatus = laststatus
+  end
+
   if opts.on_enter then
     return opts.on_enter(selection)
   else
@@ -577,7 +700,7 @@ end
 -- Init -{{{
 api.nvim_command('hi! IdoCursor         guifg=#161616 guibg=#cc8c3c')
 api.nvim_command('hi! IdoSelectedMatch  guifg=#95a99f')
-api.nvim_command('hi! Idoido_Prefix         guifg=#9e95c7')
+api.nvim_command('hi! IdoPrefix         guifg=#9e95c7')
 api.nvim_command('hi! IdoSeparator      guifg=#635a5f')
 api.nvim_command('hi! IdoPrompt         guifg=#96a6c8')
 api.nvim_command('hi! IdoWindow         guibg=#202020')
