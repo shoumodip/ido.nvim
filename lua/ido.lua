@@ -7,23 +7,26 @@ local api = vim.api
 local fn = vim.fn
 -- }}}
 -- Variables -{{{
-local ido_matched_items = {}
-local ido_match_list = {}
-local ido_window, ido_buffer
-
-local before_cursor, after_cursor, pattern = '', '', ''
-local prefix, current_item, prefix_text = '', '', ''
-local render_text = ''
-
-local ido_default_prompt = '>>> '
-local ido_prompt = ido_default_prompt
-
-local cursor_position
 local key_pressed = ''
-
 local win_width
 local render_list = {}
-local more_items = false
+
+ido_matched_items = {}
+ido_window, ido_buffer = 0, 0
+
+ido_before_cursor, ido_after_cursor = '', ''
+ido_prefix, ido_current_item, ido_prefix_text = '', '', ''
+ido_render_text = ''
+
+ido_default_prompt = '>>> '
+
+ido_cursor_position = 1
+ido_more_items = false
+
+ido_pattern_text = ''
+ido_match_list = {}
+ido_prompt = ido_default_prompt
+local ido_looping = true
 -- }}}
 -- Settings -{{{
 ido_fuzzy_matching = true
@@ -45,27 +48,42 @@ ido_decorations = {
 
 ido_max_lines = 10
 ido_min_lines = 3
+ido_key_bindings = {}
 -- }}}
 -- Special keys -{{{
-local special_keys = {
-  €kl  = 'left',
-  €kr  = 'right',
-  [2]     = 'left',
-  [6]     = 'right',
+local ido_hotkeys = {}
+ido_keybindings = {
+  ["\\<Escape>"]  = 'ido_close_window',
+  ["\\<Return>"]  = 'ido_accept',
 
-  [1]     = 'begin',
-  [5]     = 'end',
+  ["\\<Left>"]    = 'ido_cursor_move_left',
+  ["\\<Right>"]   = 'ido_cursor_move_right',
+  ["\\<C-b>"]     = 'ido_cursor_move_left',
+  ["\\<C-f>"]     = 'ido_cursor_move_right',
 
-  €kb  = 'backspace',
-  €kD  = 'delete',
+  ["\\<BS>"]      = 'ido_key_backspace',
+  ["\\<Del>"]     = 'ido_key_delete',
 
-  [27]    = 'escape',
-  [13]    = 'return',
-  [9]     = 'tab',
+  ["\\<C-a>"]     = 'ido_cursor_move_begin',
+  ["\\<C-e>"]     = 'ido_cursor_move_end',
 
-  [14]    = 'next',
-  [16]    = 'prev'
+  ["\\<Tab>"]     = 'ido_complete_prefix',
+  ["\\<C-n>"]     = 'ido_next_item',
+  ["\\<C-p>"]     = 'ido_prev_item'
 }
+
+function ido_map_keys(table)
+  for key_name, action in pairs(table) do
+    ido_hotkeys[fn.eval('"' .. key_name .. '"')] = action
+  end
+end
+
+function ido_load_keys()
+  ido_hotkeys = {}
+  ido_map_keys(ido_keybindings)
+end
+
+ido_load_keys()
 -- }}}
 -- Open the window -{{{
 local function ido_open_window()
@@ -94,32 +112,35 @@ local function ido_open_window()
   vim.wo.winhl = 'Normal:IdoWindow'
   vim.wo.wrap = false
 
-  cursor_position = 1
-  before_cursor, after_cursor, pattern, current_item, prefix, prefix_text = '', '', '', '', '', ''
+  ido_cursor_position = 1
+  ido_before_cursor, ido_after_cursor, ido_pattern_text, ido_current_item, ido_prefix, ido_prefix_text = '', '', '', '', '', ''
   ido_matched_items = {}
+  looping = true
 
   return ''
 end
 -- }}}
 -- Close the window -{{{
-local function ido_close_window()
+function ido_close_window()
   ido_prompt = ido_default_prompt
-  api.nvim_command('bdelete! | echo ""')
+  api.nvim_command('bdelete!')
+  ido_looping = false
+  return ''
 end
 -- }}}
 -- Get the matching items -{{{
-local function ido_get_matches()
+function ido_get_matches()
 
-  local pattern, true_pattern = pattern, pattern
-  ido_matched_items, current_item = {}, ""
+  local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
+  ido_matched_items, ido_current_item = {}, ""
   local ido_true_matched_items = {}
 
   if ido_fuzzy_matching then
-    pattern = pattern:gsub('.', '.*%1')
+    ido_pattern_text = ido_pattern_text:gsub('.', '.*%1')
   end
 
   if not ido_case_sensitive then
-    pattern = pattern:lower()
+    ido_pattern_text = ido_pattern_text:lower()
   end
 
   ido_true_matched_items = table.filter(ido_match_list,
@@ -128,7 +149,7 @@ local function ido_get_matches()
       v = v:lower()
     end
 
-    if v:match('^' .. true_pattern) then
+    if v:match('^' .. true_ido_pattern_text) then
       return true
     end
   end
@@ -140,7 +161,7 @@ local function ido_get_matches()
       v = v:lower()
     end
 
-    if v:match(pattern) and not v:match('^' .. true_pattern) then
+    if v:match(ido_pattern_text) and not v:match('^' .. true_ido_pattern_text) then
       return true
     end
   end
@@ -149,36 +170,36 @@ local function ido_get_matches()
   if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
 
     if #ido_true_matched_items > 0 then
-      prefix_text = table.prefix(ido_true_matched_items)
-      current_item = ido_true_matched_items[1]
-      prefix = prefix_text:gsub('^' .. true_pattern, '')
+      ido_prefix_text = table.prefix(ido_true_matched_items)
+      ido_current_item = ido_true_matched_items[1]
+      ido_prefix = ido_prefix_text:gsub('^' .. true_ido_pattern_text, '')
     else
-      prefix = ''
-      prefix_text = prefix
-      current_item = ido_matched_items[1]
+      ido_prefix = ''
+      ido_prefix_text = ido_prefix
+      ido_current_item = ido_matched_items[1]
     end
 
   elseif ido_matched_items[1] ~= nil or ido_true_matched_items[1] ~= nil then
 
     if ido_true_matched_items[1] == nil then
-      prefix = ido_matched_items[1]
-      prefix_text = prefix
-      current_item = prefix
+      ido_prefix = ido_matched_items[1]
+      ido_prefix_text = ido_prefix
+      ido_current_item = ido_prefix
       ido_matched_items = {}
     else
       if ido_matched_items[1] == nil then
-        prefix = ido_true_matched_items[1]
-        prefix_text = prefix
-        current_item = prefix
+        ido_prefix = ido_true_matched_items[1]
+        ido_prefix_text = ido_prefix
+        ido_current_item = ido_prefix
         ido_true_matched_items = {}
       else
-        current_item = ido_true_matched_items[1]
+        ido_current_item = ido_true_matched_items[1]
       end
     end
 
   else
-    prefix = ''
-    prefix_text = prefix
+    ido_prefix = ''
+    ido_prefix_text = ido_prefix
   end
 
   if #ido_matched_items > 0 then
@@ -194,113 +215,115 @@ local function ido_get_matches()
 end
 -- }}}
 -- Insert a character -{{{
-local function insert_char()
+function ido_insert_char()
   if key_pressed ~= '' then
-    before_cursor = before_cursor .. key_pressed
-    cursor_position = cursor_position + 1
-    pattern = before_cursor .. after_cursor
+    ido_before_cursor = ido_before_cursor .. key_pressed
+    ido_cursor_position = ido_cursor_position + 1
+    ido_pattern_text = ido_before_cursor .. ido_after_cursor
   end
   return ''
 end
 -- }}}
 -- Decrement the position of the cursor if possible -{{{
 local function cursor_decrement()
-  if cursor_position > 1 then
-    cursor_position = cursor_position - 1
+  if ido_cursor_position > 1 then
+    ido_cursor_position = ido_cursor_position - 1
   end
   return ''
 end
 -- }}}
 -- Increment the position of the cursor if possible -{{{
 local function cursor_increment()
-  if cursor_position <= pattern:len() then
-    cursor_position = cursor_position + 1
+  if ido_cursor_position <= ido_pattern_text:len() then
+    ido_cursor_position = ido_cursor_position + 1
   end
   return ''
 end
 -- }}}
 -- Backspace key -{{{
-local function key_backspace()
+function ido_key_backspace()
   cursor_decrement()
-  before_cursor = before_cursor:gsub('.$', '')
-  pattern = before_cursor .. after_cursor
+  ido_before_cursor = ido_before_cursor:gsub('.$', '')
+  ido_pattern_text = ido_before_cursor .. ido_after_cursor
+  ido_get_matches()
   return ''
 end
 -- }}}
 -- Delete key -{{{
-local function key_delete()
-  after_cursor = after_cursor:gsub('^.', '')
-  pattern = before_cursor .. after_cursor
+function ido_key_delete()
+  ido_after_cursor = ido_after_cursor:gsub('^.', '')
+  ido_pattern_text = ido_before_cursor .. ido_after_cursor
+  ido_get_matches()
   return ''
 end
 -- }}}
 -- Move the cursor left a character -{{{
-local function cursor_move_left()
-  after_cursor = before_cursor:sub(-1, -1) .. after_cursor
-  key_backspace()
+function ido_cursor_move_left()
+  ido_after_cursor = ido_before_cursor:sub(-1, -1) .. ido_after_cursor
+  ido_key_backspace()
   return ''
 end
 -- }}}
 -- Move the cursor right a character -{{{
-local function cursor_move_right()
-  before_cursor = before_cursor .. after_cursor:sub(1, 1)
+function ido_cursor_move_right()
+  ido_before_cursor = ido_before_cursor .. ido_after_cursor:sub(1, 1)
   cursor_increment()
-  key_delete()
+  ido_key_delete()
   return ''
 end
 -- }}}
 -- Beginning of line -{{{
-local function key_begin()
-  after_cursor = before_cursor .. after_cursor
-  before_cursor = ''
-  cursor_position = 1
+function ido_cursor_move_begin()
+  ido_after_cursor = ido_before_cursor .. ido_after_cursor
+  ido_before_cursor = ''
+  ido_cursor_position = 1
   return ''
 end
 -- }}}
 -- End of line -{{{
-local function key_end()
-  before_cursor = before_cursor .. after_cursor
-  after_cursor = ''
-  cursor_position = before_cursor:len() + 1
+function ido_cursor_move_end()
+  ido_before_cursor = ido_before_cursor .. ido_after_cursor
+  ido_after_cursor = ''
+  ido_cursor_position = ido_before_cursor:len() + 1
   return ''
 end
 -- }}}
 -- Next item -{{{
-local function next_item()
+function ido_next_item()
   if #ido_matched_items > 1 then
-    table.insert(ido_matched_items, current_item)
+    table.insert(ido_matched_items, ido_current_item)
     table.remove(ido_matched_items, 1)
-    current_item = ido_matched_items[1]
+    ido_current_item = ido_matched_items[1]
   end
   return ''
 end
 -- }}}
 -- Previous item -{{{
-local function prev_item()
+function ido_prev_item()
   if #ido_matched_items > 1 then
     table.insert(ido_matched_items, 1, ido_matched_items[#ido_matched_items])
     table.remove(ido_matched_items, #ido_matched_items)
-    current_item = ido_matched_items[1]
+    ido_current_item = ido_matched_items[1]
   end
   return ''
 end
 -- }}}
 -- Complete the prefix -{{{
-local function complete_prefix()
-  if prefix ~= '' and pattern ~= prefix_text then
-    pattern = prefix_text
-    prefix = ''
-    cursor_position = pattern:len() + 1
-    before_cursor = pattern
-    after_cursor = ''
+function ido_complete_prefix()
+  if ido_prefix ~= '' and ido_pattern_text ~= ido_prefix_text then
+    ido_pattern_text = ido_prefix_text
+    ido_prefix = ''
+    ido_cursor_position = ido_pattern_text:len() + 1
+    ido_before_cursor = ido_pattern_text
+    ido_after_cursor = ''
   end
   return ''
 end
 -- }}}
 -- Split the matches into newlines if required -{{{
 local function split_matches_lines()
-  local render_lines = string.split(render_text, '\n')
-  more_items = false
+  local render_lines = string.split(ido_render_text, '\n')
+  ido_more_items = false
 
   for key, value in pairs(render_lines) do
     if value:len() > win_width then
@@ -320,7 +343,7 @@ local function split_matches_lines()
           matches_lines:len() - ido_decorations['moreitems']:len() - 2)
           .. ' ' .. ido_decorations['moreitems']
 
-          more_items = true
+          ido_more_items = true
         end
       else
         render_lines[key] = matches_lines
@@ -335,26 +358,26 @@ local function split_matches_lines()
     end
   end
 
-  render_text = table.concat(render_lines, '\n'):gsub('^\n', '')
+  ido_render_text = table.concat(render_lines, '\n'):gsub('^\n', '')
 end
 -- }}}
 -- Render colors -{{{
 local function ido_render_colors()
-  local prefix_end = string.len(ido_prompt .. pattern)
+  local ido_prefix_end = string.len(ido_prompt .. ido_pattern_text)
   local matches_start = {}
 
   fn.matchadd('IdoPrompt', '\\%1l\\%1c.*\\%' .. ido_prompt:len() .. 'c')
   fn.matchadd('IdoSeparator', '\\M' .. ido_decorations["separator"])
 
-  if prefix ~= '' then
-    local prefix_start =
-    string.len(ido_prompt .. pattern .. ido_decorations['prefixstart'])
-    prefix_end =
-    string.len(ido_prompt .. pattern .. ido_decorations['prefixstart']
-    .. prefix .. ido_decorations['prefixend'])
+  if ido_prefix ~= '' then
+    local ido_prefix_start =
+    string.len(ido_prompt .. ido_pattern_text .. ido_decorations['prefixstart'])
+    ido_prefix_end =
+    string.len(ido_prompt .. ido_pattern_text .. ido_decorations['prefixstart']
+    .. ido_prefix .. ido_decorations['prefixend'])
 
-    fn.matchadd('IdoPrefix',
-    '\\%1l\\%' ..  prefix_start .. 'c.*\\%1l\\%' ..  prefix_end + 2 .. 'c')
+    fn.matchadd('Idoido_Prefix',
+    '\\%1l\\%' ..  ido_prefix_start .. 'c.*\\%1l\\%' ..  ido_prefix_end + 2 .. 'c')
   end
 
   if #ido_matched_items > 0 then
@@ -366,8 +389,8 @@ local function ido_render_colors()
         matches_start[1] = 1
         matches_start[2] = string.len(ido_decorations['matchstart']:gsub('\n', '')) + 1
       else
-        matches_start[1] = string.len(ido_prompt .. pattern) + 1
-        matches_start[2] = prefix_end + string.len(ido_decorations['matchstart']:gsub('\n', '')) + 2
+        matches_start[1] = string.len(ido_prompt .. ido_pattern_text) + 1
+        matches_start[2] = ido_prefix_end + string.len(ido_decorations['matchstart']:gsub('\n', '')) + 2
       end
 
       vim.fn.matchadd('IdoSeparator',
@@ -394,12 +417,12 @@ local function ido_render_colors()
     if newlines > 0 then
       match_start =
       string.gsub(ido_decorations['marker'], '\n', ''):len() + 1
-      match_end = match_start + current_item:len()
+      match_end = match_start + ido_current_item:len()
     else
-      match_start = prefix_end +
+      match_start = ido_prefix_end +
       string.len(string.gsub(ido_decorations['matchstart'], '\n', '') ..
       string.gsub(ido_decorations['marker'], '\n', '')) + 2
-      match_end = match_start + current_item:len()
+      match_end = match_start + ido_current_item:len()
     end
 
     fn.matchadd('IdoSelectedMatch', '\\%' .. newlines + 1 .. 'l\\%' ..
@@ -408,7 +431,7 @@ local function ido_render_colors()
 
   end
 
-  if more_items then
+  if ido_more_items then
     local eol_start = render_list[#render_list]:len() -
     ido_decorations['moreitems']:len() + 1
 
@@ -417,13 +440,13 @@ local function ido_render_colors()
     'l\\%' .. render_list[#render_list]:len() .. 'c')
   end
 
-  if string.len(ido_prompt .. pattern) >= win_width then
-    local length = string.len(ido_prompt .. pattern)
+  if string.len(ido_prompt .. ido_pattern_text) >= win_width then
+    local length = string.len(ido_prompt .. ido_pattern_text)
     local lines = math.floor(length / win_width) + 1
     local columns = math.floor(length % win_width) + 1
     fn.matchadd('IdoCursor', '\\%' .. lines .. 'l\\%' .. columns .. 'c')
   else
-    fn.matchadd('IdoCursor', '\\%1l\\%' .. (ido_prompt:len() + cursor_position)
+    fn.matchadd('IdoCursor', '\\%1l\\%' .. (ido_prompt:len() + ido_cursor_position)
     .. 'c')
   end
 
@@ -432,35 +455,35 @@ end
 -- }}}
 -- Render IDO -{{{
 local function ido_render()
-  local prefix_text, matched_text
+  local ido_prefix_text, matched_text
 
   if #ido_matched_items > 0 then
-    render_text = table.concat(ido_matched_items,
+    ido_render_text = table.concat(ido_matched_items,
     ido_decorations["separator"])
   end
 
-  if prefix:len() > 0 then
-    prefix_text = ido_decorations['prefixstart'] .. prefix ..
+  if ido_prefix:len() > 0 then
+    ido_prefix_text = ido_decorations['prefixstart'] .. ido_prefix ..
     ido_decorations['prefixend']
     if #ido_matched_items == 0 and #ido_matched_items == 1 then
-      prefix_text = ido_decorations['matchstart'] .. prefix_text ..
+      ido_prefix_text = ido_decorations['matchstart'] .. ido_prefix_text ..
       ido_decorations['matchend']
     end
   else
-    prefix_text = ""
+    ido_prefix_text = ""
   end
 
   if #ido_matched_items > 0 then
     matched_text =
     ido_decorations['matchstart'] .. ido_decorations['marker'] ..
-    render_text .. ido_decorations['matchend']
+    ido_render_text .. ido_decorations['matchend']
   else
     matched_text = ""
   end
 
-  render_text = ido_prompt .. pattern .. ' ' .. prefix_text .. matched_text
+  ido_render_text = ido_prompt .. ido_pattern_text .. ' ' .. ido_prefix_text .. matched_text
   split_matches_lines()
-  render_list = string.split(render_text, '\n')
+  render_list = string.split(ido_render_text, '\n')
 
   api.nvim_buf_set_lines(ido_buffer, 0, -1, false, render_list)
 
@@ -473,59 +496,49 @@ end
 -- }}}
 -- Handle key presses -{{{
 local function handle_keys()
-  while true do
+  while ido_looping do
     key_pressed = fn.getchar()
 
-    if special_keys[key_pressed] ~= nil then
-      key_pressed = special_keys[key_pressed]
+    if fn.char2nr(key_pressed) == 128 then
+      key_pressed_action = ido_hotkeys[key_pressed] and ido_hotkeys[key_pressed] or fn.nr2char(key_pressed)
     else
-      key_pressed = fn.nr2char(key_pressed)
+      key_pressed_action = ido_hotkeys[fn.nr2char(key_pressed)] and
+      ido_hotkeys[fn.nr2char(key_pressed)] or
+      fn.nr2char(key_pressed)
     end
 
-    if key_pressed == 'left' then
-      cursor_move_left()
-    elseif key_pressed == 'right' then
-      cursor_move_right()
-
-    elseif key_pressed == 'backspace' then
-      key_backspace()
-      ido_get_matches()
-    elseif key_pressed == 'delete' then
-      key_delete()
-      ido_get_matches()
-
-    elseif key_pressed == 'begin' then
-      key_begin()
-    elseif key_pressed == 'end' then
-      key_end()
-
-    elseif key_pressed == 'next' then
-      next_item()
-    elseif key_pressed == 'prev' then
-      prev_item()
-
-    elseif key_pressed == 'escape' then
-      ido_close_window()
-      return ''
-    elseif key_pressed == 'return' then
-      if current_item == '' then
-        current_item = pattern
+    if key_pressed_action == 'ido_accept' then
+      if ido_current_item == '' then
+        ido_current_item = ido_pattern_text
       end
       ido_close_window()
-      return current_item
-    elseif key_pressed == 'tab' then
-      complete_prefix()
+      return ido_current_item
 
-      if prefix_text == current_item and #ido_matched_items == 0 and
-        prefix_text ~= '' then
+    elseif key_pressed_action == 'ido_complete_prefix' then
+      ido_complete_prefix()
+
+      if ido_prefix_text == ido_current_item and #ido_matched_items == 0 and
+        ido_prefix_text ~= '' then
         ido_close_window()
-        return prefix_text
+        return ido_prefix_text
       end
 
       ido_get_matches()
+
     else
-      insert_char()
-      ido_get_matches()
+      if key_pressed_action == fn.nr2char(key_pressed) then
+        key_pressed = fn.nr2char(key_pressed)
+        ido_insert_char()
+        ido_get_matches()
+
+      else
+
+        loadstring(key_pressed_action .. '()')()
+      end
+    end
+
+    if not ido_looping then
+      return current_item
     end
 
     ido_render()
@@ -536,15 +549,24 @@ end
 function ido_complete(opts)
   opts = opts or {}
   ido_match_list = table.unique(opts.items)
-  if opts.prompt:gsub('\n', '') ~= nil then
-    ido_prompt = opts.prompt:gsub('\n', '') .. '  '
-  end
+  ido_prompt = opts.prompt and opts.prompt:gsub('\n', '') .. ' ' or ido_default_prompt
+
+  if opts.keybinds ~= nil then ido_map_keys(opts.keybinds) end
 
   ido_open_window()
   ido_get_matches()
   ido_render()
 
   local selection = handle_keys()
+
+  if opts.keybinds ~= nil then
+    ido_hotkeys = {}
+    ido_map_keys(ido_keybindings)
+  end
+
+  ido_prompt = ido_default_prompt
+  ido_looping = true
+
   if opts.on_enter then
     return opts.on_enter(selection)
   else
@@ -555,7 +577,7 @@ end
 -- Init -{{{
 api.nvim_command('hi! IdoCursor         guifg=#161616 guibg=#cc8c3c')
 api.nvim_command('hi! IdoSelectedMatch  guifg=#95a99f')
-api.nvim_command('hi! IdoPrefix         guifg=#9e95c7')
+api.nvim_command('hi! Idoido_Prefix         guifg=#9e95c7')
 api.nvim_command('hi! IdoSeparator      guifg=#635a5f')
 api.nvim_command('hi! IdoPrompt         guifg=#96a6c8')
 api.nvim_command('hi! IdoWindow         guibg=#202020')
