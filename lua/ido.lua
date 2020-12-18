@@ -659,6 +659,8 @@ function ido_complete(opts)
   win_width = vim.o.columns
 
   local laststatus = vim.o.laststatus
+  local guicursor = vim.o.guicursor
+  vim.o.guicursor = 'a:IdoHideCursor'
 
   if opts.keybinds ~= nil then ido_map_keys(opts.keybinds) end
 
@@ -690,6 +692,8 @@ function ido_complete(opts)
     vim.o.laststatus = laststatus
   end
 
+  vim.o.guicursor = guicursor
+
   if opts.on_enter then
     return opts.on_enter(selection)
   else
@@ -699,6 +703,7 @@ end
 -- }}}
 -- Init -{{{
 api.nvim_command('hi! IdoCursor         guifg=#161616 guibg=#cc8c3c')
+api.nvim_command('hi! IdoHideCursor     gui=reverse blend=100')
 api.nvim_command('hi! IdoSelectedMatch  guifg=#95a99f')
 api.nvim_command('hi! IdoPrefix         guifg=#9e95c7')
 api.nvim_command('hi! IdoSeparator      guifg=#635a5f')
