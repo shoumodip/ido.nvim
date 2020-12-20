@@ -19,7 +19,7 @@ function ido_browser()
 
   return ido_complete {
     prompt = ido_prompt:gsub(' $', ''),
-    items = fn.systemlist('ls -A ' .. directory_name),
+    items = fn.systemlist('ls -A ' .. fn.fnameescape(directory_name)),
 
     keybinds = {
       ["\\<BS>"]     = 'ido_browser_backspace',
@@ -38,7 +38,7 @@ function ido_browser_backspace()
     directory_name = fn.fnamemodify(directory_name, ':h')
 
     ido_browser_set_prompt()
-    ido_match_list = fn.systemlist('ls -A ' .. directory_name)
+    ido_match_list = fn.systemlist('ls -A ' .. fn.fnameescape(directory_name))
     ido_get_matches()
   else
     ido_key_backspace()
@@ -53,7 +53,7 @@ function ido_browser_accept()
 
   if fn.isdirectory(directory_name .. '/' .. ido_current_item) == 1 then
     directory_name = directory_name .. '/' .. ido_current_item
-    ido_match_list = fn.systemlist('ls -A ' .. directory_name)
+    ido_match_list = fn.systemlist('ls -A ' .. fn.fnameescape(directory_name))
     ido_pattern_text, ido_before_cursor, ido_after_cursor = '', '', ''
     ido_cursor_position = 1
     ido_get_matches()
