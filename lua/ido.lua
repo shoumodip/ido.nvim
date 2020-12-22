@@ -13,6 +13,7 @@ local render_list = {}
 local minimal_text_length = 0
 local minimal_text = ''
 local minimal_end_reached = false
+local ido_looping = true
 
 ido_matched_items = {}
 ido_window, ido_buffer = 0, 0
@@ -29,7 +30,6 @@ ido_more_items = false
 ido_pattern_text = ''
 ido_match_list = {}
 ido_prompt = ido_default_prompt
-local ido_looping = true
 -- }}}
 -- Settings -{{{
 ido_fuzzy_matching = true
@@ -659,8 +659,10 @@ function ido_complete(opts)
   win_width = vim.o.columns
 
   local laststatus = vim.o.laststatus
+  local ruler = vim.o.ruler
   local guicursor = vim.o.guicursor
   vim.o.guicursor = 'a:IdoHideCursor'
+  vim.o.ruler = false
 
   if opts.keybinds ~= nil then ido_map_keys(opts.keybinds) end
 
@@ -693,6 +695,7 @@ function ido_complete(opts)
   end
 
   vim.o.guicursor = guicursor
+  vim.o.ruler = ruler
 
   if opts.on_enter then
     return opts.on_enter(selection)
