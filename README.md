@@ -259,11 +259,7 @@ The functions which aren't really functions but are recognised by Ido by an `if-
 `ido_complete_prefix` Complete the prefix. If there is only one matching item, then behaves the same as `ido_accept`.
 
 ## Help in Neovim
-`:h ido` Main help file.
-
-`:h FUNCTION_NAME` Get help on a specific ido function.
-
-`:h VARIABLE_NAME` Get help on a specific ido variable.
+`:h ido.txt` Main help file.
 
 ## License
 MIT
