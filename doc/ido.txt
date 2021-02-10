@@ -5,10 +5,10 @@ License: MIT
 
 Ido mode of Emacs brought to Neovim. For those unfamiliar with Emacs,
 ido is essentially a completion framework, like 'fzf'. It's main feature
-is (|imho|) the 'prefix' feature. See below for information on the 'prefix'
+is (imho) the 'prefix' feature. See below for information on the 'prefix'
 feature.
 
-Just like Ido in Emacs, it is |completely| |extensible|. All the settings
+Just like Ido in Emacs, it is completely extensible. All the settings
 are in Lua, so it's a simple
 
   |lua| |varname| = 'value'
@@ -64,13 +64,13 @@ any) By default it is ''.
 not being rendered. Has no effect if |ido_limit_lines| is false. By default
 it is '|...|'.
 
-Example --
+Example -- >
 
-  |lua| |ido_decorations|['separator']  = '\n    '
-  |lua| |ido_decorations|['matchstart'] = '\n'
-  |lua| |ido_decorations|['marker']     = ' -> '
-  |lua| |ido_decorations|['moreitems']  = ''
-
+  lua ido_decorations['separator']  = '\n    '
+  lua ido_decorations['matchstart'] = '\n'
+  lua ido_decorations['marker']     = ' -> '
+  lua ido_decorations['moreitems']  = ''
+<
   This will create a vertical layout for Ido --
 
   |Files:| d|[o]|
@@ -133,16 +133,17 @@ will be used.
 
   |on_enter| The function which will be executed on returning the value.
 
-  For example.
-  |lua| |print(ido_complete({|prompt = 'Choose: ', items = {'red', 'green', 'blue'}|}))|
+  For example. >
+  lua print(ido_complete({prompt = 'Choose: ', items = {'red', 'green', 'blue'}}))
+<
 
-  Or just use the default prompt.
-  |lua| |print(ido_complete({|items = {'red', 'green', 'blue'}|}))|
-
+  Or just use the default prompt. >
+  lua print(ido_complete({items = {'red', 'green', 'blue'}}))
+<
   Maybe a custom function.
-
-  |lua| |ido_complete({|items = {'red', 'green', 'blue'}, on_enter = function(s) print(s) end|})|
-
+>
+  lua ido_complete({items = {'red', 'green', 'blue'}, on_enter = function(s) print(s) end})
+<
   Note: Particular order does not matter here. The options can be placed in
   whatsoever way you want. There is no specification on whether prompt should
   be placed at the first or something like that.
@@ -192,22 +193,22 @@ Keybindings consist of the following pattern --
   for calling a function.
 
   |global| These are the keybindings used in every single instance of Ido.
-  This is set in the |ido_keybindings| table.
+  This is set in the |ido_keybindings| table. >
 
-    |ido_keybindings| = {
-      ["\\<Right>"] = 'ido_cursor_move_begin',
-      ["\\<Left>"]  = 'ido_cursor_move_end',
+    ido_keybindings = {
+      ["<Right>"] = 'ido_cursor_move_begin',
+      ["<Left>"]  = 'ido_cursor_move_end',
     }
-
+<
   NOTE: After changing the global keybindings, you have to execute the
   |ido_load_keys()| lua function in order to, you know, load the keys.
   Otherwise they won't take effect.
 
   |temporary| These are keybindings used in only one instance of Ido, and are
   defined in the table of options supplied to |ido_complete|.
-
-    |print(ido_complete({|items = {'red', 'green', 'blue'}, keybinds = {["\\<Right>"] = 'ido_cursor_move_end'}|}))|
-
+>
+    print(ido_complete({items = {'red', 'green', 'blue'}, keybinds = {["<Right>"] = 'ido_cursor_move_end'}}))
+<
 -----------------------------------------------------------------------------
 
 |Variables| The variables used in Ido mode --

@@ -1,18 +1,40 @@
-# Ido Neovim
-For those of you who have been in touch with Emacsland, know of a certain feature called *Ido*. It is essentially a narrowing framework for Emacs. Well guess what, due to recent API changes in Neovim nightly, it need not be confined to Emacs any more!
-
+# Ido.nvim
 ![Ido mode](img/ido.png)
 
-# Installation
-Using Neovim's builtin package system.
-```sh
-git clone https://github.com/shoumodip/ido.nvim ~/.config/nvim/pack/plugins/start/ido.nvim
+Ido mode in neovim. This is a feature which has its origins in the greatest operating system of all item, Emacs. It is configured in Lua because it is nice and fast.
+
+## Install
+Install this like any other neovim plugin. Here are some copy-pasta commands.
+
+### Plugin Managers
+```vim
+" Vim plug
+Plug 'shoumodip/ido.nvim'
+
+" Vundle
+Plugin 'shoumodip/ido.nvim'
+
+" Dein
+call dein#add('shoumodip/ido.nvim')
+
+" Minpac
+call minpac#add('shoumodip/ido.nvim')
 ```
 
-You can also use any package manager of your choice.
+### Manual
+```sh
+## Pathogen
+cd ~/.config/nvim/bundle && git clone https://github.com/shoumodip/ido.nvim
 
-# How to use
-Ido is invoked using `ido_completing_read(PROMPT, {ITEMS})` which takes a table as an input. The table can contain four items / subtables --
+## NeoVim builtin package system
+cd ~/.config/nvim/pack/plugins/start && git clone https://github.com/shoumodip/ido.nvim
+```
+
+## Important
+***NOTE:*** All the documentation shown from now on is in lua. Dont' attempt to do this stuff in VimL.
+
+## How to use
+Ido is invoked using `ido_completing_read({OPTIONS})` which takes a table as an input. The table `OPTIONS` can contain four items / subtables --
 
 `prompt` The prompt to be used. If left blank, then `ido_default_prompt` will be used.
 
@@ -46,7 +68,7 @@ For a more "complex" example, check out `ido_find_files()` in *menus.lua*. (Boun
 
 Also check out the Api section in the `README` to fully understand the ways of extending Ido mode.
 
-# Colors
+## Colors
 Most probably, Ido will look horrible on your terminal. The reason being Ido uses some weird emulation techniques in order to enable *returning* of the selected item. So most probably you will need to change these highlight settings.
 
 `IdoCursor` The virtual cursor emulation used in Ido.
@@ -59,12 +81,7 @@ Most probably, Ido will look horrible on your terminal. The reason being Ido use
 
 `IdoPrompt` The color used for the prompt.
 
-# Settings
-Just like the Ido mode of Emacs, the Ido mode of Neovim is perfectly extensible. The settings are lua variables, so its a simple
-```vim
-lua VARNAME = VALUE
-```
-
+## Settings
 `ido_fuzzy_matching` (**Boolean**) Whether Ido should match fuzzily or not. Set to `true` by default.
 
 `ido_case_senstive` (**Boolean**) Whether Ido should match case-senstively or not. Set to `false` by default.
@@ -81,7 +98,7 @@ lua VARNAME = VALUE
 
 ![Minimal mode](img/ido_minimal.png)
 
-# Ido Decorations
+## Ido Decorations
 The various symbolifiers of Ido, like match separator, prefix start, etc. This is a lua dictionary so `lua ido_decorations[ITEM] = VALUE`, where `ITEM` is one of the following --
 
 `prefixstart` The character shown before the *prefix*. See below for stuff about the *prefix*. By default, it is `[`.
@@ -100,7 +117,7 @@ The various symbolifiers of Ido, like match separator, prefix start, etc. This i
 
 Some examples of Ido decorations --
 
-## Vertical layout
+### Vertical layout
 Execute these as lua commands.
 
 ```lua
@@ -115,7 +132,7 @@ This will create a vertical layout for Ido --
 
 ![Ido vertical](img/ido_vertical.png)
 
-# Prefix
+## Prefix
 *prefix* - The most awesome feature in existence. When using Ido, it will provide the least common prefix substring as a *suggestion*. Pressing `<Tab>` will do what you expect - **tab completion**! If there is only one item as a match, the entire match will become the prefix and on pressing `<Tab>`, it will complete the prefix and accept the item like `<Return>`.
 
     Find files: d[o] {documents | downloads}
@@ -126,7 +143,7 @@ Here `[o]` is the prefix being suggested as the substring `do` is present at the
 
 Here `[music]` is the only available match. Therefore the entire item is the suggestion.
 
-# Hotkeys
+## Hotkeys
 `<C-n>`    The next item\
 `<C-p>`    The previous item
 
@@ -143,10 +160,10 @@ Here `[music]` is the only available match. Therefore the entire item is the sug
 `<Return>` Accept the selected item, else accept the pattern text\
 `<Escape>` Escape Ido, duh
 
-# API
+## API
 Ido mode was originally from Emacsland. Therefore not provinding an API would be sacriligeous. Since Ido mode is near enough infinitely extensible, therefore this is divided into 3 parts.
 
-## Keybindings
+### Keybindings
 It is divided into two parts -- the global keybindings and the temporary keybindings.
 
 Keybindings consist of `["KEYNAME"] = 'FUNCTION'`
@@ -155,26 +172,26 @@ where `KEYNAME` is the key binding in standard vim notation (see `key-notation`)
 
 And `FUNCTION` is a global Lua function, emphasis on global. I could'nt find a way to make it work with local functions, so unless you have a solution and create a pull request, global functions it is. Also the functions must ***not*** have the `'(<args>)'` part. There can be no parenthesis at the end used for calling a function.
 
-### Global
+#### Global
 These are the keybindings used in every single instance of Ido. This is set in the `ido_keybindings` table. For example this is something a psychopath would put in the keybindings.
 
 ```lua
 ido_keybindings = {
-  ["\\<Right>"] = 'ido_cursor_move_begin',
-  ["\\<Left>"]  = 'ido_cursor_move_end',
+  ["<Right>"] = 'ido_cursor_move_begin',
+  ["<Left>"]  = 'ido_cursor_move_end',
 }
 ```
 
 ***Note:*** After changing the global keybindings, you have to execute the `ido_load_keys()` lua function in order to, you know, load the keys. Otherwise they won't take effect.
 
-### Temporary
+#### Temporary
 These are keybindings used in only one instance of Ido, and are defined in the table of options supplied to `ido_complete`.
 
 ```lua
-print(ido_complete({items = {'red', 'green', 'blue'}, keybinds = {["\\<Right>"] = 'ido_cursor_move_end'}}))
+print(ido_complete({items = {'red', 'green', 'blue'}, keybinds = {["<Right>"] = 'ido_cursor_move_end'}}))
 ```
 
-## Variables
+### Variables
 The variables used in Ido mode.
 
 `ido_matched_items` The table of the items matched.
@@ -207,7 +224,7 @@ The variables used in Ido mode.
 
 `ido_prompt` The prompt being used.
 
-## Functions
+### Functions
 The functions defined in Ido are.
 
 `ido_close_window` Close the Ido window and stop the character input loop.
@@ -234,19 +251,19 @@ The functions defined in Ido are.
 
 `ido_complete_prefix` Complete the prefix.
 
-## Special Functions
+### Special Functions
 The functions which aren't really functions but are recognised by Ido by an `if-else` statement. Meant to be used **only** in keybindings. I repeat, *"Do not try to use this in your function or whatever!"*
 
 `ido_accept` Accept the current item.
 
 `ido_complete_prefix` Complete the prefix. If there is only one matching item, then behaves the same as `ido_accept`.
 
-# Help in Neovim
+## Help in Neovim
 `:h ido` Main help file.
 
 `:h FUNCTION_NAME` Get help on a specific ido function.
 
 `:h VARIABLE_NAME` Get help on a specific ido variable.
 
-# License
+## License
 MIT
