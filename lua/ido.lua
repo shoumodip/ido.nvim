@@ -57,27 +57,32 @@ ido_key_bindings = {}
 -- Special keys -{{{
 local ido_hotkeys = {}
 ido_keybindings = {
-  ["\\<Escape>"]  = 'ido_close_window',
-  ["\\<Return>"]  = 'ido_accept',
+  ["<Escape>"]  = 'ido_close_window',
+  ["<Return>"]  = 'ido_accept',
 
-  ["\\<Left>"]    = 'ido_cursor_move_left',
-  ["\\<Right>"]   = 'ido_cursor_move_right',
-  ["\\<C-b>"]     = 'ido_cursor_move_left',
-  ["\\<C-f>"]     = 'ido_cursor_move_right',
+  ["<Left>"]    = 'ido_cursor_move_left',
+  ["<Right>"]   = 'ido_cursor_move_right',
+  ["<C-b>"]     = 'ido_cursor_move_left',
+  ["<C-f>"]     = 'ido_cursor_move_right',
 
-  ["\\<BS>"]      = 'ido_key_backspace',
-  ["\\<Del>"]     = 'ido_key_delete',
+  ["<BS>"]      = 'ido_key_backspace',
+  ["<Del>"]     = 'ido_key_delete',
 
-  ["\\<C-a>"]     = 'ido_cursor_move_begin',
-  ["\\<C-e>"]     = 'ido_cursor_move_end',
+  ["<C-a>"]     = 'ido_cursor_move_begin',
+  ["<C-e>"]     = 'ido_cursor_move_end',
 
-  ["\\<Tab>"]     = 'ido_complete_prefix',
-  ["\\<C-n>"]     = 'ido_next_item',
-  ["\\<C-p>"]     = 'ido_prev_item'
+  ["<Tab>"]     = 'ido_complete_prefix',
+  ["<C-n>"]     = 'ido_next_item',
+  ["<C-p>"]     = 'ido_prev_item'
 }
 
 function ido_map_keys(table)
   for key_name, action in pairs(table) do
+
+    if key_name:sub(1, 1) == '<' then
+      key_name = '\\'..key_name
+    end
+
     ido_hotkeys[fn.eval('"' .. key_name .. '"')] = action
   end
 end
@@ -121,7 +126,12 @@ end
 -- Close the window -{{{
 function ido_close_window()
   ido_prompt = ido_default_prompt
-  api.nvim_command('echo "" | bdelete!')
+  api.nvim_command('echo ""')
+
+  if not ido_minimal_mode then
+    api.nvim_command('bdelete!')
+  end
+
   ido_looping = false
   return ''
 end

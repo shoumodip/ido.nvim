@@ -22,9 +22,9 @@ function ido_browser()
     items = fn.systemlist('ls -A ' .. fn.fnameescape(directory_name)),
 
     keybinds = {
-      ["\\<BS>"]     = 'ido_browser_backspace',
-      ["\\<Return>"] = 'ido_browser_accept',
-      ["\\<Tab>"]    = 'ido_browser_prefix',
+      ["<BS>"]     = 'ido_browser_backspace',
+      ["<Return>"] = 'ido_browser_accept',
+      ["<Tab>"]    = 'ido_browser_prefix',
     },
 
     on_enter = function(s) directory_name = vim.loop.cwd() end
