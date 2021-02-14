@@ -9,6 +9,20 @@ table.filter = function(t, p)
   return out
 end
 
+-- Recursively Print table
+table.print = function(tbl, indent)
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      table.print(v, indent+1)
+    else
+      print(formatting .. v)
+    end
+  end
+end
+
 -- Find out the common prefix from a table of strings
 table.prefix = function(t)
   local shortest, prefix, first = math.huge, ""

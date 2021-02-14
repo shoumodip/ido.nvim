@@ -1,7 +1,8 @@
 -- Import custom Modules -{{{
 require "utils/tables"
 require "utils/strings"
--- }}}
+local fzy = require("utils/fzy")
+
 -- Helper variables -{{{
 local api = vim.api
 local fn = vim.fn
@@ -137,6 +138,33 @@ function ido_close_window()
 end
 -- }}}
 -- Get the matching items -{{{
+function ido_get_fzy_matches()
+  local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
+  ido_matched_items, ido_current_item = {}, ""
+  local ido_true_matched_items = {}
+
+  if not ido_fuzzy_matching then
+    error("Unable to use fzy native without fuzzy matching enabled")
+  end
+
+  if not ido_case_sensitive then
+    ido_pattern_text = ido_pattern_text:lower()
+  end
+
+  -- pattern => test
+  -- prefix => ing
+  -- { { "testing", { 1, 2, 3, 4 } }, { "testing-payments", { 1, 2, 3, 4 } }, { "testing-snowpack", { 1, 2, 3, 4 } } }
+  -- for now just obtain matches,and set current_item
+
+  ido_matched_items, _ido_true_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
+
+  ido_prefix_text = table.prefix(ido_matched_items)
+  ido_current_item = ido_matched_items[1]
+  ido_prefix = ido_prefix_text:gsub('^' .. ido_pattern_text, '')
+
+  return ''
+end
+
 function ido_get_matches()
 
   local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
@@ -253,7 +281,7 @@ function ido_key_backspace()
   cursor_decrement()
   ido_before_cursor = ido_before_cursor:gsub('.$', '')
   ido_pattern_text = ido_before_cursor .. ido_after_cursor
-  ido_get_matches()
+  ido_get_fzy_matches()
   return ''
 end
 -- }}}
@@ -261,7 +289,7 @@ end
 function ido_key_delete()
   ido_after_cursor = ido_after_cursor:gsub('^.', '')
   ido_pattern_text = ido_before_cursor .. ido_after_cursor
-  ido_get_matches()
+  ido_get_fzy_matches()
   return ''
 end
 -- }}}
@@ -630,13 +658,13 @@ local function handle_keys()
         return ido_prefix_text
       end
 
-      ido_get_matches()
+      ido_get_fzy_matches()
 
     else
       if key_pressed_action == fn.nr2char(key_pressed) then
         key_pressed = fn.nr2char(key_pressed)
         ido_insert_char()
-        ido_get_matches()
+        ido_get_fzy_matches()
 
       else
 
@@ -682,7 +710,7 @@ function ido_complete(opts)
     ido_open_window()
   end
 
-  ido_get_matches()
+  ido_get_fzy_matches()
 
   if ido_minimal_mode then
     ido_minimal_render()
