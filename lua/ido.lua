@@ -53,6 +53,19 @@ ido_decorations = {
 ido_max_lines = 10
 ido_min_lines = 3
 ido_key_bindings = {}
+ido_filter = function(items, pattern, matches, exact_matches)
+  for k,v in pairs(items) do
+    if not ido_case_sensitive then
+      v = v:lower()
+    end
+
+    if v:match('^' .. pattern) then
+      table.insert(exact_matches, v)
+    elseif v:match(pattern) then
+      table.insert(matches, v)
+    end
+  end
+end
 -- }}}
 -- Special keys -{{{
 local ido_hotkeys = {}
@@ -153,34 +166,20 @@ function ido_get_matches(filter_func)
 
   -- Decide what filter to use, prioritizes `local' user provided `opts:filter`
   -- over global `ido_filter`
-  -- falls back to default filter function if both are undefined
   if filter_func then
     filter_func(
       ido_match_list,
       ido_pattern_text,
-      ido_true_matched_items,
-      ido_matched_items
+      ido_matched_items,
+      ido_true_matched_items
     )
-  elseif ido_filter then
+  else
     ido_filter(
       ido_match_list,
       ido_pattern_text,
-      ido_true_matched_items,
-      ido_matched_items
+      ido_matched_items,
+      ido_true_matched_items
     )
-  else
-    for k,v in pairs(ido_match_list) do
-      if not ido_case_sensitive then
-        v = v:lower()
-      end
-
-      -- Determine if this is a true match or a regular match
-      if v:match('^' .. ido_pattern_text) then
-        table.insert(ido_true_matched_items, v)
-      elseif v:match(ido_pattern_text) then
-        table.insert(ido_matched_items, v)
-      end
-    end
   end
 
   if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
