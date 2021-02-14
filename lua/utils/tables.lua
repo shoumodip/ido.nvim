@@ -9,15 +9,6 @@ table.filter = function(t, p)
   return out
 end
 
--- Apply a function on every element of a table
-table.map = function(tbl, f)
-    local t = {}
-    for k,v in pairs(tbl) do
-        t[k] = f(v)
-    end
-    return t
-end
-
 -- Find out the common prefix from a table of strings
 table.prefix = function(t)
   local shortest, prefix, first = math.huge, ""
@@ -60,11 +51,4 @@ table.unique = function(t)
   end
 
   return out
-end
-
-table.merge = function(t1, t2)
-  for k,v in pairs(t2) do
-    table.insert(t1, v)
-  end
-  return t1
 end
