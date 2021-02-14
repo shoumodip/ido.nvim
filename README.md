@@ -34,7 +34,7 @@ cd ~/.config/nvim/pack/plugins/start && git clone https://github.com/shoumodip/i
 ***NOTE:*** All the documentation shown from now on is in lua. Dont' attempt to do this stuff in VimL.
 
 ## How to use
-Ido is invoked using `ido_completing_read({OPTIONS})` which takes a table as an input. The table `OPTIONS` can contain four items / subtables --
+Ido is invoked using `ido_completing_read({OPTIONS})` which takes a table as an input. The table `OPTIONS` can contain five items / subtables --
 
 `prompt` The prompt to be used. If left blank, then `ido_default_prompt` will be used.
 
@@ -43,6 +43,8 @@ Ido is invoked using `ido_completing_read({OPTIONS})` which takes a table as an 
 `keybinds` Custom keybindings to be used. If left default, then `ido_keybindings` will be used.
 
 `on_enter` The function which will be executed on returning the value.
+
+`filter' The function which will be executed to filter the items list
 
 For example.
 
@@ -81,6 +83,57 @@ Most probably, Ido will look horrible on your terminal. The reason being Ido use
 
 `IdoPrompt` The color used for the prompt.
 
+## Filters
+Ido.nvim comes with a default fuzzy filter function that should serve most common use-cases.
+If more flexibility is desired, ido provides two mechanisms to define custom filters:
+
+### 1. `filter` option for ido_complete function
+You can pass a `filter` option when invoking `ido_complete`. This function when present will receive the following arguments:
+
+`ido_match_list` The list of items on which the pattern is being matched.
+
+`ido_pattern_text` The pattern being matched in the items.
+
+`ido_matched_items` The table of the items matched.
+
+`ido_true_matched_items` The table of the items that are exact matches.
+
+Ido expects the filter function to `reduce` the `ido_match_list` by inserting all `exact matches` in the `ido_true_matched_items` array and all other matches in `ido_matched_items`
+
+```lua
+ido_complete({
+  items = {'red', 'green', 'blue'},
+  filter = function(items, s, matches, exact_matches)
+    for k,v in pairs(items) do
+      if v:match('^' .. s) then
+        table.insert(exact_matches, v)
+      elseif v:match(s) then
+        table.insert(matches, v)
+      end
+    end
+  end
+})
+```
+
+### 2. global `ido_filter` setting
+When specified this function will be used by all `ido_complete` functions that dont have an explicit custom filter.
+Function receives same arguments as the aforementioned `filter` option.
+
+```lua
+ido_filter = function(items, s, matches, exact_matches)
+  for k,v in pairs(items) do
+    if v:match('^' .. s) then
+      table.insert(exact_matches, v)
+    elseif v:match(s) then
+      table.insert(matches, v)
+    end
+  end
+end
+
+-- This ido_complete will defer to the global `ido_filter` function
+ido_complete({ items = {'red', 'green', 'blue'})
+```
+
 ## Settings
 `ido_fuzzy_matching` (**Boolean**) Whether Ido should match fuzzily or not. Set to `true` by default.
 
@@ -93,6 +146,8 @@ Most probably, Ido will look horrible on your terminal. The reason being Ido use
 `ido_max_lines` (**Number**) The maximum boundary of the Ido minibuffer. Only has any effect if `ido_limit_lines` is `false`.
 
 `ido_limit_lines` (**Boolean**) If the number of lines in the Ido minibuffer exceeds `ido_min_lines`, decides whether to show the `more_items` symbol or make the minibuffer `ido_max_lines` tall. `true` by default.
+
+`ido_filter` (**Function**) If set Ido will defer to this filter function on all `ido_complete` invocations, unless a `ido_complete` specifies a local `filter` option.
 
 `ido_minimal_mode` (**Boolean**) If set to `true`, Ido will be rendered in command mode (`:`), and the `ido_{min, max, limit}_lines` will have no effect. If set to `false`, Ido will be rendered in a floating window, and the afforementioned variables will have effect if needed. `false` by default.
 
