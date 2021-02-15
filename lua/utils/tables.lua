@@ -23,6 +23,26 @@ table.print = function(tbl, indent)
   end
 end
 
+-- Apply a function on every element of a table
+table.map = function(tbl, f)
+    local t = {}
+    for k,v in pairs(tbl) do
+        t[k] = f(v)
+    end
+    return t
+end
+
+-- Pluck nth element on every nested table
+table.pluck = function(tbl, index)
+  local out = {}
+
+  for k,v in pairs(tbl) do
+    table.insert(out, v[index])
+  end
+
+  return out
+end
+
 -- Find out the common prefix from a table of strings
 table.prefix = function(t)
   local shortest, prefix, first = math.huge, ""

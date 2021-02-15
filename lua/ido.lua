@@ -156,11 +156,51 @@ function ido_get_fzy_matches()
   -- { { "testing", { 1, 2, 3, 4 } }, { "testing-payments", { 1, 2, 3, 4 } }, { "testing-snowpack", { 1, 2, 3, 4 } } }
   -- for now just obtain matches,and set current_item
 
-  ido_matched_items, _ido_true_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
+  ido_matched_items, ido_true_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
 
-  ido_prefix_text = table.prefix(ido_matched_items)
-  ido_current_item = ido_matched_items[1]
-  ido_prefix = ido_prefix_text:gsub('^' .. ido_pattern_text, '')
+  if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
+
+    if #ido_true_matched_items > 0 then
+      ido_prefix_text = table.prefix(ido_true_matched_items)
+      ido_current_item = ido_true_matched_items[1]
+      ido_prefix = ido_prefix_text:gsub('^' .. true_ido_pattern_text, '')
+    else
+      ido_prefix = ''
+      ido_prefix_text = ido_prefix
+      ido_current_item = ido_matched_items[1]
+    end
+
+  elseif ido_matched_items[1] ~= nil or ido_true_matched_items[1] ~= nil then
+
+    if ido_true_matched_items[1] == nil then
+      ido_prefix = ido_matched_items[1]
+      ido_prefix_text = ido_prefix
+      ido_current_item = ido_prefix
+      ido_matched_items = {}
+    else
+      if ido_matched_items[1] == nil then
+        ido_prefix = ido_true_matched_items[1]
+        ido_prefix_text = ido_prefix
+        ido_current_item = ido_prefix
+        ido_true_matched_items = {}
+      else
+        ido_current_item = ido_true_matched_items[1]
+      end
+    end
+
+  else
+    ido_prefix = ''
+    ido_prefix_text = ido_prefix
+  end
+
+  if #ido_matched_items > 0 then
+    for _, v in pairs(ido_matched_items) do
+      table.insert(ido_true_matched_items, v)
+    end
+
+  end
+
+  ido_matched_items = ido_true_matched_items
 
   return ''
 end
