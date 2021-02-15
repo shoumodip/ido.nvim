@@ -138,7 +138,7 @@ function ido_close_window()
 end
 -- }}}
 -- Get the matching items -{{{
-function ido_get_fzy_matches()
+function ido_get_matches()
   local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
   ido_matched_items, ido_current_item = {}, ""
   local ido_true_matched_items = {}
@@ -151,97 +151,7 @@ function ido_get_fzy_matches()
     ido_pattern_text = ido_pattern_text:lower()
   end
 
-  -- pattern => test
-  -- prefix => ing
-  -- { { "testing", { 1, 2, 3, 4 } }, { "testing-payments", { 1, 2, 3, 4 } }, { "testing-snowpack", { 1, 2, 3, 4 } } }
-  -- for now just obtain matches,and set current_item
-
   ido_matched_items, ido_true_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
-
-  if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
-
-    if #ido_true_matched_items > 0 then
-      ido_prefix_text = table.prefix(ido_true_matched_items)
-      ido_current_item = ido_true_matched_items[1]
-      ido_prefix = ido_prefix_text:gsub('^' .. true_ido_pattern_text, '')
-    else
-      ido_prefix = ''
-      ido_prefix_text = ido_prefix
-      ido_current_item = ido_matched_items[1]
-    end
-
-  elseif ido_matched_items[1] ~= nil or ido_true_matched_items[1] ~= nil then
-
-    if ido_true_matched_items[1] == nil then
-      ido_prefix = ido_matched_items[1]
-      ido_prefix_text = ido_prefix
-      ido_current_item = ido_prefix
-      ido_matched_items = {}
-    else
-      if ido_matched_items[1] == nil then
-        ido_prefix = ido_true_matched_items[1]
-        ido_prefix_text = ido_prefix
-        ido_current_item = ido_prefix
-        ido_true_matched_items = {}
-      else
-        ido_current_item = ido_true_matched_items[1]
-      end
-    end
-
-  else
-    ido_prefix = ''
-    ido_prefix_text = ido_prefix
-  end
-
-  if #ido_matched_items > 0 then
-    for _, v in pairs(ido_matched_items) do
-      table.insert(ido_true_matched_items, v)
-    end
-
-  end
-
-  ido_matched_items = ido_true_matched_items
-
-  return ''
-end
-
-function ido_get_matches()
-
-  local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
-  ido_matched_items, ido_current_item = {}, ""
-  local ido_true_matched_items = {}
-
-  if ido_fuzzy_matching then
-    ido_pattern_text = ido_pattern_text:gsub('.', '.*%1')
-  end
-
-  if not ido_case_sensitive then
-    ido_pattern_text = ido_pattern_text:lower()
-  end
-
-  ido_true_matched_items = table.filter(ido_match_list,
-  function(v)
-    if not ido_case_sensitive then
-      v = v:lower()
-    end
-
-    if v:match('^' .. true_ido_pattern_text) then
-      return true
-    end
-  end
-  )
-
-  ido_matched_items = table.filter(ido_match_list,
-  function(v)
-    if not ido_case_sensitive then
-      v = v:lower()
-    end
-
-    if v:match(ido_pattern_text) and not v:match('^' .. true_ido_pattern_text) then
-      return true
-    end
-  end
-  )
 
   if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
 
@@ -321,7 +231,7 @@ function ido_key_backspace()
   cursor_decrement()
   ido_before_cursor = ido_before_cursor:gsub('.$', '')
   ido_pattern_text = ido_before_cursor .. ido_after_cursor
-  ido_get_fzy_matches()
+  ido_get_matches()
   return ''
 end
 -- }}}
@@ -329,7 +239,7 @@ end
 function ido_key_delete()
   ido_after_cursor = ido_after_cursor:gsub('^.', '')
   ido_pattern_text = ido_before_cursor .. ido_after_cursor
-  ido_get_fzy_matches()
+  ido_get_matches()
   return ''
 end
 -- }}}
@@ -698,13 +608,13 @@ local function handle_keys()
         return ido_prefix_text
       end
 
-      ido_get_fzy_matches()
+      ido_get_matches()
 
     else
       if key_pressed_action == fn.nr2char(key_pressed) then
         key_pressed = fn.nr2char(key_pressed)
         ido_insert_char()
-        ido_get_fzy_matches()
+        ido_get_matches()
 
       else
 
@@ -750,7 +660,7 @@ function ido_complete(opts)
     ido_open_window()
   end
 
-  ido_get_fzy_matches()
+  ido_get_matches()
 
   if ido_minimal_mode then
     ido_minimal_render()
