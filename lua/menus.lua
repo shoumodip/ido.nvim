@@ -70,6 +70,7 @@ function ido_browser_prefix()
 
   if ido_prefix_text == ido_current_item and #ido_matched_items == 0 and
     ido_prefix_text ~= '' then
+
     ido_browser_accept()
   end
 end

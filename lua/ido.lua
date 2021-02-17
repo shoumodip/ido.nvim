@@ -1,6 +1,7 @@
 -- Import custom Modules -{{{
 require "utils/tables"
 require "utils/strings"
+local fzy = require("utils/fzy")
 -- }}}
 -- Helper variables -{{{
 local api = vim.api
@@ -14,6 +15,7 @@ local minimal_text_length = 0
 local minimal_text = ''
 local minimal_end_reached = false
 local ido_looping = true
+local ido_results_limit = 0
 
 ido_matched_items = {}
 ido_window, ido_buffer = 0, 0
@@ -138,86 +140,57 @@ end
 -- }}}
 -- Get the matching items -{{{
 function ido_get_matches()
-
-  local ido_pattern_text, true_ido_pattern_text = ido_pattern_text, ido_pattern_text
   ido_matched_items, ido_current_item = {}, ""
-  local ido_true_matched_items = {}
+  ido_results_limit = 0
+  ido_prefix = ""
+  ido_prefix_text = ""
 
-  if ido_fuzzy_matching then
-    ido_pattern_text = ido_pattern_text:gsub('.', '.*%1')
-  end
+  local init_suggestion = false
 
   if not ido_case_sensitive then
     ido_pattern_text = ido_pattern_text:lower()
   end
 
-  ido_true_matched_items = table.filter(ido_match_list,
-  function(v)
-    if not ido_case_sensitive then
-      v = v:lower()
-    end
+  ido_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
+  table.sort(ido_matched_items, function (left, right) return left[3] > right[3] end)
 
-    if v:match('^' .. true_ido_pattern_text) then
-      return true
-    end
-  end
-  )
+  local suggest_source
 
-  ido_matched_items = table.filter(ido_match_list,
-  function(v)
-    if not ido_case_sensitive then
-      v = v:lower()
-    end
+  for _, item in pairs(ido_matched_items) do
 
-    if v:match(ido_pattern_text) and not v:match('^' .. true_ido_pattern_text) then
-      return true
-    end
-  end
-  )
+     if #ido_pattern_text == 0 then
+        goto continue
+     end
 
-  if #ido_matched_items > 1 or #ido_true_matched_items > 1 then
+     if not string.find(item[1], ido_pattern_text, 1, true) then
+        break
+     end
 
-    if #ido_true_matched_items > 0 then
-      ido_prefix_text = table.prefix(ido_true_matched_items)
-      ido_current_item = ido_true_matched_items[1]
-      ido_prefix = ido_prefix_text:gsub('^' .. true_ido_pattern_text, '')
-    else
-      ido_prefix = ''
-      ido_prefix_text = ido_prefix
-      ido_current_item = ido_matched_items[1]
-    end
+     suggest_source = item[1]:sub(item[2][#item[2]] + 1)
 
-  elseif ido_matched_items[1] ~= nil or ido_true_matched_items[1] ~= nil then
+     if not init_suggestion then
+        ido_prefix = suggest_source
+        init_suggestion = true
+     else
+        ido_prefix = string.prefix(ido_prefix, suggest_source)
+     end
 
-    if ido_true_matched_items[1] == nil then
-      ido_prefix = ido_matched_items[1]
-      ido_prefix_text = ido_prefix
-      ido_current_item = ido_prefix
-      ido_matched_items = {}
-    else
-      if ido_matched_items[1] == nil then
-        ido_prefix = ido_true_matched_items[1]
-        ido_prefix_text = ido_prefix
-        ido_current_item = ido_prefix
-        ido_true_matched_items = {}
-      else
-        ido_current_item = ido_true_matched_items[1]
-      end
-    end
+     ::continue::
 
-  else
-    ido_prefix = ''
-    ido_prefix_text = ido_prefix
+     ido_results_limit = ido_results_limit + 1
   end
 
   if #ido_matched_items > 0 then
-    for _, v in pairs(ido_matched_items) do
-      table.insert(ido_true_matched_items, v)
-    end
-
+     ido_current_item = ido_matched_items[1][1]
+  else
+     return ""
   end
 
-  ido_matched_items = ido_true_matched_items
+  if #ido_matched_items == 1 then
+     ido_prefix_text = ido_current_item
+     ido_prefix = ido_prefix_text
+     ido_matched_items = {}
+  end
 
   return ''
 end
@@ -318,7 +291,7 @@ end
 -- }}}
 -- Complete the prefix -{{{
 function ido_complete_prefix()
-  if ido_prefix ~= '' and ido_pattern_text ~= ido_prefix_text then
+  if ido_prefix_text ~= '' then
     ido_pattern_text = ido_prefix_text
     ido_prefix = ''
     ido_cursor_position = ido_pattern_text:len() + 1
@@ -565,7 +538,7 @@ local function ido_minimal_render()
 
   if #ido_matched_items > 0 then
     api.nvim_command('echohl IdoSeparator')
-    ido_minimal_print(ido_decorations["matchstart"], '}')
+    ido_minimal_print(ido_decorations["matchstart"], ido_decorations["matchend"])
     api.nvim_command('echohl IdoNormal')
   end
 
@@ -574,11 +547,11 @@ local function ido_minimal_render()
     -- if minimal_text_length > win_width then break end
 
     if k == 1 then api.nvim_command('echohl IdoSelectedMatch') end
-    ido_minimal_print(v, '}')
+    ido_minimal_print(v[1], '}')
 
     if ido_matched_items[k + 1] ~= nil and minimal_text_length <= win_width then
       api.nvim_command('echohl IdoSeparator')
-      ido_minimal_print(ido_decorations["separator"], '}')
+      ido_minimal_print(ido_decorations["separator"], ido_decorations["matchend"])
       api.nvim_command('echohl IdoNormal')
     end
 
@@ -586,7 +559,7 @@ local function ido_minimal_render()
 
   if #ido_matched_items > 0 then
     api.nvim_command('echohl IdoSeparator')
-    ido_minimal_print(ido_decorations["matchend"], '}')
+    ido_minimal_print(ido_decorations["matchend"], ido_decorations["matchend"])
     api.nvim_command('echohl IdoNormal')
   end
 
@@ -671,7 +644,7 @@ function ido_complete(opts)
   local laststatus = vim.o.laststatus
   local ruler = vim.o.ruler
   local guicursor = vim.o.guicursor
-  vim.o.guicursor = 'a:IdoHideCursor'
+  -- vim.o.guicursor = 'a:IdoHideCursor'
   vim.o.ruler = false
 
   if opts.keybinds ~= nil then ido_map_keys(opts.keybinds) end
@@ -704,7 +677,7 @@ function ido_complete(opts)
     vim.o.laststatus = laststatus
   end
 
-  vim.o.guicursor = guicursor
+  -- vim.o.guicursor = guicursor
   vim.o.ruler = ruler
 
   if opts.on_enter then
