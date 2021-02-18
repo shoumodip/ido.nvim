@@ -1,11 +1,8 @@
 -- Import custom Modules -{{{
 require "utils/tables"
 require "utils/strings"
+local fzy = require("utils/fzy")
 -- }}}
-
--- Import fzy_lua_native {{{
-local fzy = require 'utils/fzy'
---}}}
 
 -- Helper variables -{{{
 local api = vim.api
