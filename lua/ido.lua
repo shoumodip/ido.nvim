@@ -4,13 +4,7 @@ require "utils/strings"
 -- }}}
 
 -- Import fzy_lua_native {{{
-local fzy_lua_native = vim.api.nvim_get_runtime_file("deps/fzy-lua-native/lua/native.lua", false)[1]
-
-if not fzy_lua_native then
-  error("Unable to find native fzy native lua dep file. Probably need to update submodules!")
-end
-
-local fzy = loadfile(fzy_lua_native)()
+local fzy = require 'utils/fzy'
 --}}}
 
 -- Helper variables -{{{
@@ -162,8 +156,7 @@ function ido_get_matches()
   end
 
   ido_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
-
-  table.sort(ido_matched_items, function (left, right) return left[3] > right[3] end)
+  table.sort(ido_matched_items, function (left, right) return fzy.score(left) < fzy.score(right) end)
 
   local suggest_source
 
