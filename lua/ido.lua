@@ -1,8 +1,18 @@
 -- Import custom Modules -{{{
 require "utils/tables"
 require "utils/strings"
-local fzy = require("utils/fzy")
 -- }}}
+
+-- Import fzy_lua_native {{{
+local fzy_lua_native = vim.api.nvim_get_runtime_file("deps/fzy-lua-native/lua/native.lua", false)[1]
+
+if not fzy_lua_native then
+  error("Unable to find native fzy native lua dep file. Probably need to update submodules!")
+end
+
+local fzy = loadfile(fzy_lua_native)()
+--}}}
+
 -- Helper variables -{{{
 local api = vim.api
 local fn = vim.fn
@@ -152,6 +162,7 @@ function ido_get_matches()
   end
 
   ido_matched_items = fzy.filter(ido_pattern_text, ido_match_list)
+
   table.sort(ido_matched_items, function (left, right) return left[3] > right[3] end)
 
   local suggest_source
