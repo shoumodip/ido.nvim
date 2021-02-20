@@ -44,7 +44,6 @@ table.pluck = function(tbl, index)
 end
 
 table.unique = function(t)
-
   local out = {}
   local hash = {}
 
@@ -57,4 +56,12 @@ table.unique = function(t)
   end
 
   return out
+end
+
+-- merge two tables
+table.merge = function(t1, t2)
+  for k,v in pairs(t2) do
+    t1[k] = v
+  end
+  return t1
 end
