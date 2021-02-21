@@ -14,6 +14,8 @@ local FZY_MIN_SCORE = fzy_native.get_score_min()
 local FZY_MAX_SCORE = fzy_native.get_score_max()
 
 function fzy.score(match)
+  if not match then return -1 end
+
   local fzy_score = match[3]
 
   if not fzy_score then return -1 end

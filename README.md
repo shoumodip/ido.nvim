@@ -381,6 +381,32 @@ The functions defined in Ido are:
 `complete_prefix` Complete the prefix.
 
 ### Special Functions
+There are two categories of functions that need special attention when working with them:
+
+#### Extensible funtions
+
+The `get_matches` functions uses three functions to filter/sort/generate prefix.
+Each of which can be overwritten / extended to change the global behavior of Ido.
+
+These functions are all exposed on the `ido` module:
+
+`filter(pattern_text, match_list)` The function that *filters* the items and returns the items that match the `pattern_text`
+
+`sorter(left, right)` The function that *sorts* the items. Behaves like any regular `table.sort` callback.
+
+`suggester(pattern_text, matched_items)` generates prefix based on the *sorted* `matched_items`, and `pattern_text`
+
+For instance in order to overwrite the sorting function to sort in reverse order:
+
+```lua
+local ido = require('ido')
+
+ido.sorter = function(a,b)
+  ido.fzy.score(a) > ido.fzy.score(b)
+end
+```
+
+#### Internal functions
 The functions which aren't really functions but are recognised by Ido by an `if-else` statement. Meant to be used **only** in keybindings. I repeat, *"Do not try to use this in your function or whatever!"*
 
 `ido_accept` Accept the current item.

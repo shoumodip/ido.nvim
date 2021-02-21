@@ -11,6 +11,9 @@ local fn = vim.fn
 
 local ido = {}
 
+-- Expose fzy on the ido module
+ido.fzy = fzy
+
 -- Variables -{{{
 local key_pressed = ''
 local win_width
@@ -165,30 +168,35 @@ function ido.close_window()
 end
 -- }}}
 -- Get the matching items -{{{
-function ido.get_matches()
-  ido.vars.matched_items, ido.vars.current_item = {}, ""
-  ido_results_limit = 0
-  ido.vars.prefix = ""
-  ido.vars.prefix_text = ""
 
+ -- Default filter function uses FZY,
+ -- user can overwrite or extend this function by overwriting ido.filter
+ function ido.filter(pattern_text, match_list)
+   local match_list = ido.vars.match_list
+   local pattern_text = ido.vars.pattern_text
+
+   return fzy.filter(pattern_text, match_list)
+ end
+
+ -- Default sorter function uses normalized FZY score,
+-- user can overwrite or extend this function by overwriting ido.sorter
+function ido.sorter(left, right)
+  return fzy.score(left) < fzy.score(right)
+end
+
+-- Default suggestion function uses FZY position based prefix generation
+-- user can overwrite or extend this function by overwriting ido.suggester
+function ido.suggester(pattern_text, matched_items)
   local init_suggestion = false
-
-  if not ido.settings.case_sensitive then
-    ido.vars.pattern_text = ido.vars.pattern_text:lower()
-  end
-
-  ido.vars.matched_items = fzy.filter(ido.vars.pattern_text, ido.vars.match_list)
-  table.sort(ido.vars.matched_items, function (left, right) return fzy.score(left) < fzy.score(right) end)
-
   local suggest_source
 
   for _, item in pairs(ido.vars.matched_items) do
 
-     if #ido.vars.pattern_text == 0 then
+     if #pattern_text == 0 then
         goto continue
      end
 
-     if not string.find(item[1], ido.vars.pattern_text, 1, true) then
+     if not string.find(item[1], pattern_text, 1, true) then
         break
      end
 
@@ -206,17 +214,38 @@ function ido.get_matches()
      ido_results_limit = ido_results_limit + 1
   end
 
-  if #ido.vars.matched_items > 0 then
-     ido.vars.current_item = ido.vars.matched_items[1][1]
+  if #matched_items > 0 then
+     ido.vars.current_item = matched_items[1][1]
   else
      return ""
   end
 
-  if #ido.vars.matched_items == 1 then
-     ido.vars.prefix_text = ido.vars.current_item
-     ido.vars.prefix = ido.vars.prefix_text
-     ido.vars.matched_items = {}
+  if #matched_items == 1 then
+    ido.vars.prefix_text = ido.vars.current_item
+    ido.vars.prefix = ido.vars.prefix_text
+    ido.vars.matched_items = {}
   end
+end
+
+function ido.get_matches()
+  ido.vars.matched_items = {}
+  ido.vars.current_item = ""
+  ido_results_limit = 0
+  ido.vars.prefix = ""
+  ido.vars.prefix_text = ""
+
+  local pattern_text = ido.vars.pattern_text
+  local match_list = ido.vars.match_list
+
+  if not ido.settings.case_sensitive then
+    ido.vars.pattern_text = pattern_text:lower()
+  end
+
+  ido.vars.matched_items = ido.filter(pattern_text, match_list)
+
+  table.sort(ido.vars.matched_items, ido.sorter)
+
+  ido.suggester(pattern_text, ido.vars.matched_items)
 
   return ''
 end
