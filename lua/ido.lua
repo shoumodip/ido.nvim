@@ -154,6 +154,19 @@ function ido.options.setup(options)
          return nil
       end
 
+      -- Layout can be defined as a string also
+      if option == "layout" and type(value) == "string" then
+         local layout = ido.layouts[value]
+
+         -- Check if the layout is valid
+         if type(layout) == "table" then
+            value = vim.deepcopy(layout)
+         else
+            error("Invalid layout: "..value, 2)
+            return nil
+         end
+      end
+
       -- Check if the types match up
       if type(value) ~= type(ido.options[option]) then
          error("Expected "..option.." of type "..type(ido.options[option])..

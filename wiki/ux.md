@@ -30,7 +30,7 @@ local ido = require("ido")
 - The name of the layout cannot be `setup` or `default`
 
 ### `ido.layouts.setup()`
-There is a helper function called `ido.layouts.setup()` which you can use. Like with the `ido.setup()` function, here are the differences between the two approaches
+There is a helper function called `ido.layouts.setup()` which you can use. Like with the `ido.options.setup()` function, here are the differences between the two approaches
 
 ```lua
 -- With ido.layouts.setup()
@@ -67,21 +67,19 @@ ido.layouts.minimal = {
 ### Use the layout
 - Set the `ido.options.layout` option to `ido.layouts.minimal`
 - To change the sandboxed option, set the `ido.sandbox.options.layout` option
-
-In the `ido.start()` function it can accept the layout parameter in two ways
-
-- The name of the layout
-- The layout as the table itself
+- The `ido.options.setup()` function can take the name of the layout as a string also
 
 ```lua
-ido.start({
-   layout = "minimal" -- The name of the layout
+ido.options.setup({
 
-   layout = ido.layouts.minimal -- The layout table itself
+   -- Both of these are valid
+   layout = "minimal",
+   layout = ido.layouts.minimal
 
-   -- Other code
 })
 ```
+
+- Same goes for `ido.start()`
 
 ## Another Example
 Let's implement a vertical layout

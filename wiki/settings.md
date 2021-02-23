@@ -27,7 +27,7 @@ Even this can be divided into two groups -- temporary or *sandboxed* and permane
 - `looping` Whether the event loop of Ido is on. Boolean (`false`)
 
 ## Options
-- `layout` The layout used by Ido. Table (`ido.layouts.default`)
+- `layout` The layout used by Ido. Table or string (`ido.layouts.default`)
 
 - `prompt` The prompt of Ido. String (`>>>`)
 
@@ -103,12 +103,12 @@ The aforementioned variables and options can now be accessed by
 - `ido.sandbox.variables` The sandboxed variables
 - `ido.sandbox.options` The sandboxed options
 
-## `ido.setup()`
+## `ido.options.setup()`
 If you wish to change `ido.options` manually, go right ahead. However there is a helper function for doing just that with type checks to prevent errors. Here are the comparisons between the two approaches, use whatever way you wish to use.
 
 ```lua
--- With ido.setup()
-ido.setup({
+-- With ido.options.setup()
+ido.options.setup({
    prompt = "Match: ",
    keys = {
       ["<Right>"] = "stdlib.cursor.forward_word"
@@ -118,7 +118,7 @@ ido.setup({
 ```
 
 ```lua
--- Without ido.setup()
+-- Without ido.options.setup()
 ido.options.prompt = "Match: "
 
 vim.tbl_extend("force", ido.options.keys, {
@@ -151,7 +151,7 @@ Keybinding as described in `:h key-notation`. Note that keychords are **NOT ALLO
 Keys can also be bound to functions
 
 ```lua
-ido.setup({
+ido.options.setup({
    keys = {
 
       -- Re-render on <C-b> because why not
