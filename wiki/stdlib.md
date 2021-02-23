@@ -1,7 +1,7 @@
 # The Standard Library of Ido
 > The ultra-extensible narrowing framework for Neovim. Originally inspired by the Emacs mode, Ido aims to make interactive matching a pleasure.
 
-Ido is a narrowing *framework*, a library if you will. Therefore it comes with a standard library of commonly used functions which all users can agree on. And even if you don't agree on them, there are [advices](wiki/advices.md). ;)
+Ido is a narrowing *framework*, a library if you will. Therefore it comes with a standard library of commonly used functions which all users can agree on. And even if you don't agree on them, there are [advices](advices.md). ;)
 
 First of all load the standard library module
 

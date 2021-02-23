@@ -163,7 +163,7 @@ ido.setup({
 Functional programming and the concept of functions as first-class citizens are game-changing, aren't they?
 
 ## Supplementary information
-The information of options should be enough for most people. But if you **really** want to make the Ido experience *your own*, I would recommend you to take a look at the documentations for the [Standard library of Ido](wiki/stdlib.md) and the [main module](wiki/main.md).
+The information of options should be enough for most people. But if you **really** want to make the Ido experience *your own*, I would recommend you to take a look at the documentations for the [Standard library of Ido](stdlib.md) and the [main module](main.md).
 
 ## Also note
 `require("ido.core.main").start()` can take variables and options as input. These will get stored in the sandbox.

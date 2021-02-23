@@ -26,7 +26,7 @@ Acts as a wrapper around the customized `fzy.filter()` function.
 
 It is generally recommended to call this function as `main.async(main.get_results)` whenever you can. The reason it is not non-blocking by default is because the `main.accept_suggestion()` functions requires a blocking filtering in a non-advice manner.
 
-There are several [advices](wiki/advices.md) in this function
+There are several [advices](advices.md) in this function
 
 - `filter_on_get_results` Filter the items when this function is called
 
@@ -86,7 +86,7 @@ What it does:
 ## `main.define_keys(KEYS)`
 Define keys as given in the `KEYS` table
 
-See the [Options and variables](wiki/settings.md) for more information on keybindings.
+See the [Options and variables](settings.md) for more information on keybindings.
 
 ## `main.exit()`
 Stop the event loop of Ido, and get rid of the Ido UI.
@@ -112,4 +112,4 @@ require("ido.core.main").start({
 ```
 
 ## Further information
-At this point there is not much left which you need to know to just use Ido. However if you went through the advices documentation, I would recommned going though the documentation for the [Standard library of Ido](wiki/stdlib.md), considering you seem to be in the mood of *really* customizing Ido to your liking. The standard library won't teach you anything about customization per-say, but it will be useful to have in your arsenal, **especially** if you read up on advices.
+At this point there is not much left which you need to know to just use Ido. However if you went through the advices documentation, I would recommned going though the documentation for the [Standard library of Ido](stdlib.md), considering you seem to be in the mood of *really* customizing Ido to your liking. The standard library won't teach you anything about customization per-say, but it will be useful to have in your arsenal, **especially** if you read up on advices.

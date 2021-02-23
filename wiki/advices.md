@@ -245,5 +245,5 @@ A thing of concern: Make sure you get the `PERMANENT` flag right! It didn't matt
 I really hope all of these helped you wrap (hehe) your head around the concept of advices. Even if you don't fully understand at the moment, there is no need to fret. You will get the hang of it after you *try out* the advice module **for yourself**.
 
 ## Further information
-- See the [Standard library](wiki/stdlib.md) and the [Main module](wiki/main.md) documentation to find out the way to *really* customize Ido and make its experience your own.
+- See the [Standard library](stdlib.md) and the [Main module](main.md) documentation to find out the way to *really* customize Ido and make its experience your own.
 - Learn Lisp. Advices were originally created in Lisp. Trust me when I say my implementation is an ad-hoc solution. Use Lisp for the true experience.

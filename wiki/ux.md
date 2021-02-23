@@ -1,5 +1,5 @@
 # UX
-This will address the `layout` option of Ido, which you have probably got a glimpse of in [Settings and options](wiki/settings.md).
+This will address the `layout` option of Ido, which you have probably got a glimpse of in [Settings and options](settings.md).
 
 ## How it is documented
 `NAME` `DOCUMENTATION`. `TYPE` (`DEFAULT VALUE`)
@@ -108,4 +108,4 @@ ido.layouts.minimal.dynamic_resize = true
 
 When you define a layout, it essentially creates a table in the `ido.layouts` parent table. Said table contains the decorations and UX settings you provided. Therefore you can change anything at a moment's notice.
 
-Lastly, if you haven't already, read the [Settings and options](wiki/settings.md) documentation.
+Lastly, if you haven't already, read the [Settings and options](settings.md) documentation.
