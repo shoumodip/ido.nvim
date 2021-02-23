@@ -37,6 +37,18 @@ require("ido").start({items = {"red", "green", "blue"}})
 - `<CR>` Accept the selected item (if any)
 - `<Esc>` Exit ido
 
+## Change colors
+- `IdoPrompt` The color of the prompt
+
+- `IdoCursor` The color of the virtual cursor
+- `IdoUXElements` The color of the UX elements
+
+- `IdoNormal` The color of normal text in Ido
+- `IdoSelected` The color of the selected item in Ido
+- `IdoSuggestion` The color of the suggestion in Ido
+
+- `IdoHideCursor` Hide the real terminal cursor to prevent weird UI
+
 ## Advanced Usage
 Ido is extensible to the point where you can literally break it. The following documentation files will explain the API of Ido mode.
 
