@@ -96,7 +96,7 @@ The main API to Ido. It starts the Ido interface.
 
 `OPTIONS` The table of options and variables supplied to Ido. It will go through each and every key in the table. If said key is a variable, change the value of the variable in the sandbox. Same goes for if it were an option. Basically it acts as a common interface for both variables and options, since there are no common names between them.
 
-It returns the selected item or `""`.
+It returns the selected item or `""`. If `strict_match` is `true` and no results were found, it will return the search query.
 
 ### What is `ido.start()` then?
 This is just an alias to the `main.start()` function. It is there because I envision the `lua/ido.lua` file to be the goto file for anybody wishing to use Ido. Also it is much shorter to type.
