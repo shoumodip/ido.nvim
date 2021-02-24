@@ -27,7 +27,7 @@ Even this can be divided into two groups -- temporary or *sandboxed* and permane
 - `looping` Whether the event loop of Ido is on. Boolean (`false`)
 
 ## Options
-- `layout` The layout used by Ido. Table or string (`ido.layouts.default`)
+- `layout` The layout used by Ido. Table (`ido.layouts.default`)
 
 - `prompt` The prompt of Ido. String (`>>>`)
 
@@ -70,6 +70,8 @@ Even this can be divided into two groups -- temporary or *sandboxed* and permane
 - `fuzzy_matching` Whether Ido should match fuzzily. Boolean (`true`)
 
 - `word_separators` Characters which behave as word separators. String (`"|/?,.;: "`)
+
+- `strict_match` Whether Ido should return "" if no results found, instead of the search query. Boolean (`false`)
 
 ## Sandboxed
 When Ido starts it sandboxes all the options and variables. This is done to prevent weird errors (eg: User pressed `<C-c>`).
@@ -120,11 +122,8 @@ ido.options.setup({
 ```lua
 -- Without ido.options.setup()
 ido.options.prompt = "Match: "
-
-vim.tbl_extend("force", ido.options.keys, {
-   ["<Right>"] = "stdlib.cursor.forward_word"
-   ["<Left>"] = "stdlib.cursor.backward_word"
-})
+ido.options.keys["<Right>"] = "stdlib.cursor.forward_word"
+ido.options.keys["<Left>"] = "stdlib.cursor.backward_word"
 ```
 
 ## Keybindings

@@ -70,6 +70,8 @@ end
 -- @return true
 function main.accept_selected()
    local variables = ido.sandbox.variables
+   local options = ido.sandbox.options
+
    local selected_item = ""
 
    if #variables.results == 0 then
@@ -80,11 +82,14 @@ function main.accept_selected()
 
    advice.setup("exit_on_accept_selected", main.exit)
 
-   advice.setup("clear_query_after_accept_selected", function ()
-      variables.before_cursor = ""
-      variables.after_cursor = ""
-      variables.suggestion = ""
-   end)
+   if options.strict_match then
+      advice.setup("clear_query_after_accept_selected", function ()
+         variables.before_cursor = ""
+         variables.after_cursor = ""
+      end)
+   end
+
+   variables.suggestion = ""
 
    variables.results = {{selected_item}}
 
@@ -296,6 +301,11 @@ function main.start(options)
    main.loop()
 
    local result = variables.results[variables.selected][1]
+
+   -- Use the query as the result if no items were found and strict match is off
+   if not options.strict_match and #result == 0 then
+      result = variables.before_cursor..variables.after_cursor
+   end
 
    -- The event loop of Ido has stopped, get rid of the sandbox
    ido.sandbox.variables = {}

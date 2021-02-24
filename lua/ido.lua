@@ -131,6 +131,9 @@ ido.options = {
 
    -- Characters which behave as word separators
    word_separators = "|/?,.;: ",
+
+   -- Whether Ido should return "" if no results found, instead of the query string
+   strict_match = false,
 }
 
 --- Setup Ido
