@@ -157,6 +157,17 @@ function ido.options.setup(options)
          return nil
       end
 
+      -- Do not overwrite all the keybindings
+      if option == "keys" then
+         if type(value) ~= "table" then
+            goto mismatch_type
+         end
+
+         ido.options.keys = vim.tbl_extend("force", ido.options.keys, value)
+
+         goto continue
+      end
+
       -- Layout can be defined as a string also
       if option == "layout" and type(value) == "string" then
          local layout = ido.layouts[value]
@@ -171,6 +182,8 @@ function ido.options.setup(options)
       end
 
       -- Check if the types match up
+      ::mismatch_type::
+
       if type(value) ~= type(ido.options[option]) then
          error("Expected "..option.." of type "..type(ido.options[option])..
          " but got "..type(value).." instead", 2)
@@ -185,6 +198,8 @@ function ido.options.setup(options)
 
       -- Set the option
       ido.options[option] = value
+
+      ::continue::
    end
 
    return true

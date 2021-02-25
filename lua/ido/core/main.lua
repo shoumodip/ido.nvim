@@ -290,9 +290,12 @@ function main.start(options)
 
    vim.cmd("set guicursor+=a:IdoHideCursor")
 
-   -- Prepare
-   main.async(main.get_results)
+   -- Re-render Ido when the NeoVim window is resized
+   -- This NEEDS to be an asynchronous action, otherwise it won't work
+   vim.cmd("autocmd VimResized <buffer> lua require('ido.core.main').async(require('ido.core.ui').render)")
 
+   -- Prepare to start
+   main.async(main.get_results)
    main.define_keys(options.keys)
 
    -- Ready. Set. Go!
@@ -311,6 +314,9 @@ function main.start(options)
    ido.sandbox.variables = {}
    ido.sandbox.options = {}
    advice.sandbox = {}
+
+   -- Get rid of the Ido re-render on window resize autocommand
+   vim.cmd("autocmd! VimResized <buffer>")
 
    return result
 end
