@@ -24,41 +24,41 @@ end
 --- Get the matching items and the suggestion
 -- @return true
 function main.get_results()
-   local variables = ido.sandbox.variables
-   local options = ido.sandbox.options
+   local vars = ido.sandbox.vars
+   local opts = ido.sandbox.opts
 
-   local query = variables.before_cursor..variables.after_cursor
+   local query = vars.before_cursor..vars.after_cursor
 
-   variables.selected = 1
-   variables.suggestion = ""
+   vars.selected = 1
+   vars.suggestion = ""
 
    if #query > 0 then
       advice.setup("filter_on_get_results", function ()
-         variables.results, variables.suggestion = fzy.filter(
+         vars.results, vars.suggestion = fzy.filter(
             query,
-            variables.items,
-            options.case_sensitive,
-            options.fuzzy_matching)
+            vars.items,
+            opts.case_sensitive,
+            opts.fuzzy_matching)
       end)
    else
       advice.setup("get_results_for_empty_query", function ()
-         variables.suggestion = ""
-         variables.results = {}
+         vars.suggestion = ""
+         vars.results = {}
 
-         for _, item in pairs(variables.items) do
-            table.insert(variables.results, {item, 0})
+         for _, item in pairs(vars.items) do
+            table.insert(vars.results, {item, 0})
          end
       end)
    end
 
    -- No matched items
-   if #variables.results == 0 then
+   if #vars.results == 0 then
       advice.setup("none_found_after_get_results", function ()
-         variables.selected = 0
+         vars.selected = 0
       end)
-   elseif #variables.results == 1 then
+   elseif #vars.results == 1 then
       advice.setup("single_result_after_get_results", function ()
-         variables.suggestion = variables.results[1][1]
+         vars.suggestion = vars.results[1][1]
       end)
    end
 
@@ -69,29 +69,24 @@ end
 --- Accept the selected item
 -- @return true
 function main.accept_selected()
-   local variables = ido.sandbox.variables
-   local options = ido.sandbox.options
+   local vars = ido.sandbox.vars
+   local opts = ido.sandbox.opts
 
    local selected_item = ""
 
-   if #variables.results == 0 then
+   if #vars.results == 0 then
       advice.setup("no_results_on_accept_selected")
    else
-      selected_item = variables.results[variables.selected][1]
+      selected_item = vars.results[vars.selected][1]
    end
 
-   advice.setup("exit_on_accept_selected", main.exit)
+   advice.setup("exit_on_accept_selected", function ()
+      main.exit(not opts.strict_match)
+   end)
 
-   if options.strict_match then
-      advice.setup("clear_query_after_accept_selected", function ()
-         variables.before_cursor = ""
-         variables.after_cursor = ""
-      end)
-   end
+   vars.suggestion = ""
 
-   variables.suggestion = ""
-
-   variables.results = {{selected_item}}
+   vars.results = {{selected_item}}
 
    return true
 end
@@ -101,28 +96,28 @@ end
 -- Else concatenate the suggestion to the query text
 -- @return true
 function main.accept_suggestion()
-   local variables = ido.sandbox.variables
+   local vars = ido.sandbox.vars
 
-   if #variables.suggestion == 0 then
+   if #vars.suggestion == 0 then
       advice.setup("no_suggestion_on_accept_suggestion")
-   elseif #variables.results == 1 then
+   elseif #vars.results == 1 then
       advice.setup("single_result_on_accept_suggestion", main.accept_selected)
    else
       advice.setup("fuse_query_on_accept_suggestion", function ()
          stdlib.cursor.line_end()
-         variables.before_cursor = variables.before_cursor..variables.suggestion
+         vars.before_cursor = vars.before_cursor..vars.suggestion
       end)
 
       advice.setup("get_results_after_accept_suggestion", main.get_results)
 
       -- Check if there is only one result now
-      if #variables.results == 1 then
+      if #vars.results == 1 then
          advice.setup("single_result_after_accept_suggestion", main.accept_selected)
       end
    end
 
    advice.setup("clear_suggestion_after_accept_suggestion", function ()
-      variables.suggestion = ""
+      vars.suggestion = ""
    end)
 
    return true
@@ -134,10 +129,10 @@ end
 -- @param char The character to insert
 -- @return true
 function main.insert(string)
-   local variables = ido.sandbox.variables
+   local vars = ido.sandbox.vars
 
    advice.setup("insert_string", function ()
-      variables.before_cursor = variables.before_cursor..string
+      vars.before_cursor = vars.before_cursor..string
    end)
 
    advice.setup("get_results_after_insert_string", function ()
@@ -150,14 +145,14 @@ end
 --- Loop Ido
 -- @return nil if binding errors occured, else true
 function main.loop()
-   local variables = ido.sandbox.variables
+   local vars = ido.sandbox.vars
 
    ui.render()
 
-   while (variables.looping) do
+   while (vars.looping) do
 
       local key_pressed = vim.fn.getchar()
-      local binding = variables.bindings[key_pressed]
+      local binding = vars.bindings[key_pressed]
 
       if binding then
          if type(binding) == "function" then
@@ -225,20 +220,29 @@ function main.define_keys(keys)
          key = vim.fn.char2nr(key)
       end
 
-      ido.sandbox.variables.bindings[key] = mapping
+      ido.sandbox.vars.bindings[key] = mapping
    end
 
    return true
 end
 
 --- Exit out of Ido
+-- @param clear Clear the query and suggestion
 -- @return true
-function main.exit()
-   local variables = ido.sandbox.variables
+function main.exit(clear)
+   local vars = ido.sandbox.vars
+   clear = clear == nil and true or nil
 
-   variables.looping = false
-   variables.results = {{""}}
-   variables.selected = 1
+   vars.looping = false
+   vars.results = {{""}}
+   vars.selected = 1
+
+   -- Clear the query and the suggestion
+   if clear then
+      vars.before_cursor = ""
+      vars.after_cursor = ""
+      vars.suggestion = ""
+   end
 
    -- Get rid of the Ido UI
    ui.clear()
@@ -249,43 +253,43 @@ function main.exit()
    return true
 end
 
-function main.start(options)
+function main.start(opts)
 
    -- Sandbox Ido
-   ido.sandbox.variables = vim.deepcopy(ido.variables)
-   ido.sandbox.options = vim.deepcopy(ido.options)
+   ido.sandbox.vars = vim.deepcopy(ido.vars)
+   ido.sandbox.opts = vim.deepcopy(ido.opts)
 
-   -- Load the options
-   for key, value in pairs(options) do
-      if ido.sandbox.options[key] ~= nil then
-         ido.sandbox.options[key] = value
-      elseif ido.sandbox.variables[key] ~= nil then
-         ido.sandbox.variables[key] = value
+   -- Load the opts
+   for key, value in pairs(opts) do
+      if ido.sandbox.opts[key] ~= nil then
+         ido.sandbox.opts[key] = value
+      elseif ido.sandbox.vars[key] ~= nil then
+         ido.sandbox.vars[key] = value
       else
          error("Invalid option/variable: "..key, 2)
          return nil
       end
    end
 
-   if type(options) ~= "nil" and type(options.keys) == "table" then
-      ido.sandbox.options.keys = vim.tbl_extend("force", ido.options.keys, options.keys)
+   if type(opts) ~= "nil" and type(opts.keys) == "table" then
+      ido.sandbox.opts.keys = vim.tbl_extend("force", ido.opts.keys, opts.keys)
    end
 
-   local variables = ido.sandbox.variables
-   local options = ido.sandbox.options
+   local vars = ido.sandbox.vars
+   local opts = ido.sandbox.opts
 
    -- If the layout is a string load it
-   if type(options.layout) == "string" then
-      options.layout = ido.layouts[options.layout]
+   if type(opts.layout) == "string" then
+      opts.layout = ido.layouts[opts.layout]
    end
 
    -- UI changes to make Ido feel "homey"
    main.cmdheight = main.cmdheight or vim.o.cmdheight
 
-   if options.layout.dynamic_resize then
+   if opts.layout.dynamic_resize then
       vim.o.cmdheight = 1
    else
-      vim.o.cmdheight = options.layout.height
+      vim.o.cmdheight = opts.layout.height
    end
 
    vim.cmd("set guicursor+=a:IdoHideCursor")
@@ -296,23 +300,23 @@ function main.start(options)
 
    -- Prepare to start
    main.async(main.get_results)
-   main.define_keys(options.keys)
+   main.define_keys(opts.keys)
 
    -- Ready. Set. Go!
    ui.clear()
-   variables.looping = true
+   vars.looping = true
    main.loop()
 
-   local result = variables.results[variables.selected][1]
+   local result = vars.results[vars.selected][1]
 
    -- Use the query as the result if no items were found and strict match is off
-   if not options.strict_match and #result == 0 then
-      result = variables.before_cursor..variables.after_cursor
+   if not opts.strict_match and #result == 0 then
+      result = vars.before_cursor..vars.after_cursor
    end
 
    -- The event loop of Ido has stopped, get rid of the sandbox
-   ido.sandbox.variables = {}
-   ido.sandbox.options = {}
+   ido.sandbox.vars = {}
+   ido.sandbox.opts = {}
    advice.sandbox = {}
 
    -- Get rid of the Ido re-render on window resize autocommand

@@ -52,8 +52,9 @@ require("ido").start({items = {"red", "green", "blue"}})
 ## Advanced Usage
 Ido is extensible to the point where you can literally break it. The following documentation files will explain the API of Ido mode.
 
-- [Variables and options](wiki/settings.md)
+- [Options and variables](wiki/opts_vars.md)
 - [Layouts and UX](wiki/ux.md)
 - [Advices](wiki/advices.md)
 - [Main module](wiki/main.md)
 - [Standard Library of Ido](wiki/stdlib.md)
+- [Packages](wiki/packages.md)

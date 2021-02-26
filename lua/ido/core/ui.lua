@@ -103,29 +103,29 @@ function ui.render()
 
    -- Prepare yourself for some ugly code
 
-   local variables = ido.sandbox.variables
-   local options = ido.sandbox.options
+   local vars = ido.sandbox.vars
+   local opts = ido.sandbox.opts
 
    -- The number of results and the index of the item after the selected one
-   local results_limit = #variables.results
-   local index = variables.selected + 1
+   local results_limit = #vars.results
+   local index = vars.selected + 1
 
    -- The columns and the maximum possible characters which can be displayed
    ui.columns = vim.o.columns
-   ui.chars_maximum = ui.columns * options.layout.height
+   ui.chars_maximum = ui.columns * opts.layout.height
 
    -- Draw the prompt and text before the cursor
-   if not ui.draw(options.prompt, "IdoPrompt") then return nil end
-   if not ui.draw(variables.before_cursor) then return true end
+   if not ui.draw(opts.prompt, "IdoPrompt") then return true end
+   if not ui.draw(vars.before_cursor) then return true end
 
    -- Check if there is anything after the cursor
-   if #variables.after_cursor > 0 then
+   if #vars.after_cursor > 0 then
 
       -- Draw the character directly after the cursor as being highlighted by the cursor
-      if not ui.draw(variables.after_cursor:sub(1, 1), "IdoCursor") then return true end
+      if not ui.draw(vars.after_cursor:sub(1, 1), "IdoCursor") then return true end
 
       -- Draw the rest of the query text as normal
-      if not ui.draw(variables.after_cursor:sub(2, -1)) then return true end
+      if not ui.draw(vars.after_cursor:sub(2, -1)) then return true end
 
       -- Add an extra blank
       ui.draw(" ")
@@ -136,35 +136,35 @@ function ui.render()
    end
 
    -- Check if there are results
-   if variables.selected == 0 then
+   if vars.selected == 0 then
       goto render
    end
 
    -- Check if there is only one result
-   if #variables.results == 1 then
+   if #vars.results == 1 then
 
       -- Draw the results as a suggestion
-      if not ui.draw(options.layout.suggest_start, "IdoUXElements") then return true end
-      if not ui.draw(variables.results[variables.selected][1], "IdoSuggestion") then return true end
-      if not ui.draw(options.layout.suggest_end, "IdoUXElements") then return true end
+      if not ui.draw(opts.layout.suggest_start, "IdoUXElements") then return true end
+      if not ui.draw(vars.results[vars.selected][1], "IdoSuggestion") then return true end
+      if not ui.draw(opts.layout.suggest_end, "IdoUXElements") then return true end
 
       goto render
    else
 
       -- Check if there is a suggestion
-      if #variables.suggestion > 0 then
+      if #vars.suggestion > 0 then
 
          -- Draw the suggestion
-         if not ui.draw(options.layout.suggest_start, "IdoUXElements") then return true end
-         if not ui.draw(variables.suggestion, "IdoSuggestion") then return true end
-         if not ui.draw(options.layout.suggest_end, "IdoUXElements") then return true end
+         if not ui.draw(opts.layout.suggest_start, "IdoUXElements") then return true end
+         if not ui.draw(vars.suggestion, "IdoSuggestion") then return true end
+         if not ui.draw(opts.layout.suggest_end, "IdoUXElements") then return true end
       end
 
       -- Miss the '||' operator of shell scripting yet? I sure as hades do
 
       -- Draw the selected item
-      if not ui.draw(options.layout.results_start, "IdoUXElements") then return true end
-      if not ui.draw(variables.results[variables.selected][1], "IdoSelected") then return true end
+      if not ui.draw(opts.layout.results_start, "IdoUXElements") then return true end
+      if not ui.draw(vars.results[vars.selected][1], "IdoSelected") then return true end
    end
 
    -- Draw the rest of the items
@@ -172,18 +172,18 @@ function ui.render()
 
       -- Index is there to wrap around once we reach of the results list
       if index > results_limit then index = 1 end
-      if index == variables.selected then break end
+      if index == vars.selected then break end
 
       -- Draw the separator and the item
-      if not ui.draw(options.layout.results_separator, "IdoUXElements") then return true end
-      if not ui.draw(variables.results[index][1]) then return true end
+      if not ui.draw(opts.layout.results_separator, "IdoUXElements") then return true end
+      if not ui.draw(vars.results[index][1]) then return true end
 
       -- Increment the index
       index = index + 1
    end
 
    -- Draw the decoration which signifies the end of all results
-   if not ui.draw(options.layout.results_end, "IdoUXElements") then return true end
+   if not ui.draw(opts.layout.results_end, "IdoUXElements") then return true end
 
    ::render::
    ui.draw("", nil, true)

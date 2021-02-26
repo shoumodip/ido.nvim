@@ -47,8 +47,6 @@ Advices in this function
 
 - `exit_on_accept_selected` Exit after selecting the result
 
-- `clear_query_after_accept_selected` Clear the query and suggestion after accepting the result
-
 ## `main.accept_suggestion`
 Accept the suggestion (if any).
 
@@ -81,20 +79,20 @@ What it does:
 - Check if the key is bound to anything
 - Execute that mapping
 - If a mapping was not found, insert the key (`main.insert()`)
-- Loop while `ido.sandbox.variables.looping` is "truthy"
+- Loop while `ido.sandbox.vars.looping` is "truthy"
 
 ## `main.define_keys(KEYS)`
 Define keys as given in the `KEYS` table
 
-See the [Options and variables](settings.md) for more information on keybindings.
+See the [Options and variables](opts_vars.md) for more information on keybindings.
 
 ## `main.exit()`
 Stop the event loop of Ido, and get rid of the Ido UI.
 
-## `main.start(OPTIONS)`
+## `main.start(OPTS)`
 The main API to Ido. It starts the Ido interface.
 
-`OPTIONS` The table of options and variables supplied to Ido. It will go through each and every key in the table. If said key is a variable, change the value of the variable in the sandbox. Same goes for if it were an option. Basically it acts as a common interface for both variables and options, since there are no common names between them.
+`OPTS` The table of options and variables supplied to Ido. It will go through each and every key in the table. If said key is a variable, change the value of the variable in the sandbox. Same goes for if it were an option. Basically it acts as a common interface for both variables and options, since there are no common names between them.
 
 It returns the selected item or `""`. If `strict_match` is `true` and no results were found, it will return the search query.
 

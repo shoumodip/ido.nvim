@@ -1,5 +1,5 @@
 # UX
-This will address the `layout` option of Ido, which you have probably got a glimpse of in [Settings and options](settings.md).
+This will address the `layout` option of Ido, which you have probably got a glimpse of in [Options and variables](opts_vars.md).
 
 ## How it is documented
 `NAME` `DOCUMENTATION`. `TYPE` (`DEFAULT VALUE`)
@@ -30,7 +30,7 @@ local ido = require("ido")
 - The name of the layout cannot be `setup` or `default`
 
 ### `ido.layouts.setup()`
-There is a helper function called `ido.layouts.setup()` which you can use. Like with the `ido.options.setup()` function, here are the differences between the two approaches
+There is a helper function called `ido.layouts.setup()` which you can use. Like with the `ido.opts.setup()` function, here are the differences between the two approaches
 
 ```lua
 -- With ido.layouts.setup()
@@ -65,12 +65,12 @@ ido.layouts.minimal = {
 ```
 
 ### Use the layout
-- Set the `ido.options.layout` option to `ido.layouts.minimal`
-- To change the sandboxed option, set the `ido.sandbox.options.layout` option
-- The `ido.options.setup()` function can take the name of the layout as a string also
+- Set the `ido.opts.layout` option to `ido.layouts.minimal`
+- To change the sandboxed option, set the `ido.sandbox.opts.layout` option
+- The `ido.opts.setup()` function can take the name of the layout as a string also
 
 ```lua
-ido.options.setup({
+ido.opts.setup({
 
    -- Both of these are valid
    layout = "minimal",
@@ -106,4 +106,4 @@ ido.layouts.minimal.dynamic_resize = true
 
 When you define a layout, it essentially creates a table in the `ido.layouts` parent table. Said table contains the decorations and UX settings you provided. Therefore you can change anything at a moment's notice.
 
-Lastly, if you haven't already, read the [Settings and options](settings.md) documentation.
+Lastly, if you haven't already, read the [Options and varibles](opts_vars.md) documentation.

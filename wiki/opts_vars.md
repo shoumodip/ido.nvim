@@ -76,8 +76,8 @@ Even this can be divided into two groups -- temporary or *sandboxed* and permane
 ## Sandboxed
 When Ido starts it sandboxes all the options and variables. This is done to prevent weird errors (eg: User pressed `<C-c>`).
 
-- `sandbox.variables` The variables
-- `sandbox.options` The options
+- `sandbox.vars` The variables
+- `sandbox.opts` The options
 
 ### Permanent vs sandboxed
 The decision should be simple.
@@ -86,8 +86,8 @@ The decision should be simple.
 - If you wish to make a temporary change for the current running Ido, change the sandboxed variables.
 
 Both permanent and sandboxed variables and options have the same name and the same effect. So it's just a matter of
-- `ido.variables.VAR_NAME` or `ido.options.OPT_NAME` for permanent changes
-- `ido.sandbox.variables.VAR_NAME` or `ido.sandbox.options.OPT_NAME` for sandboxed changes
+- `ido.vars.VAR_NAME` or `ido.opts.OPT_NAME` for permanent changes
+- `ido.sandbox.vars.VAR_NAME` or `ido.sandbox.opts.OPT_NAME` for sandboxed changes
 
 ***NOTE:*** When Ido has started running, it will sandbox all the variables and options. So even if you make changes to the permanent versions, they will be ignored until the currently running Ido exits.
 
@@ -100,17 +100,17 @@ local ido = require("ido")
 
 The aforementioned variables and options can now be accessed by
 
-- `ido.variables` The permanent variables
-- `ido.options` The permanent options
-- `ido.sandbox.variables` The sandboxed variables
-- `ido.sandbox.options` The sandboxed options
+- `ido.vars` The permanent variables
+- `ido.opts` The permanent options
+- `ido.sandbox.vars` The sandboxed variables
+- `ido.sandbox.opts` The sandboxed options
 
-## `ido.options.setup()`
-If you wish to change `ido.options` manually, go right ahead. However there is a helper function for doing just that with type checks to prevent errors. Here are the comparisons between the two approaches, use whatever way you wish to use.
+## `ido.opts.setup()`
+If you wish to change `ido.opts` manually, go right ahead. However there is a helper function for doing just that with type checks to prevent errors. Here are the comparisons between the two approaches, use whatever way you wish to use.
 
 ```lua
--- With ido.options.setup()
-ido.options.setup({
+-- With ido.opts.setup()
+ido.opts.setup({
    prompt = "Match: ",
    keys = {
       ["<Right>"] = "stdlib.cursor.forward_word"
@@ -120,14 +120,14 @@ ido.options.setup({
 ```
 
 ```lua
--- Without ido.options.setup()
-ido.options.prompt = "Match: "
-ido.options.keys["<Right>"] = "stdlib.cursor.forward_word"
-ido.options.keys["<Left>"] = "stdlib.cursor.backward_word"
+-- Without ido.opts.setup()
+ido.opts.prompt = "Match: "
+ido.opts.keys["<Right>"] = "stdlib.cursor.forward_word"
+ido.opts.keys["<Left>"] = "stdlib.cursor.backward_word"
 ```
 
 ## Keybindings
-Keybindings are stored in `ido.options.keys`. It is a table of mappings in the format
+Keybindings are stored in `ido.opts.keys`. It is a table of mappings in the format
 
 ```
 KEY = MAPPING
@@ -150,7 +150,7 @@ Keybinding as described in `:h key-notation`. Note that keychords are **NOT ALLO
 Keys can also be bound to functions
 
 ```lua
-ido.options.setup({
+ido.opts.setup({
    keys = {
 
       -- Re-render on <C-b> because why not

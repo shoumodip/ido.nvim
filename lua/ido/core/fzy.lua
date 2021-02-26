@@ -72,7 +72,7 @@ function fzy.filter(query, items, is_case_sensitive, fuzzy_matching)
    local init_suggestion = false
    local suggestion = ""
 
-   local fuzzy_matching = fuzzy_matching or true
+   local fuzzy_matching = fuzzy_matching == nil and true or fuzzy_matching
 
    -- Filter the items
    for i = 1, #items do
@@ -97,7 +97,6 @@ function fzy.filter(query, items, is_case_sensitive, fuzzy_matching)
          end
 
          table.insert(results, {item, score})
-
       end
 
       ::continue::
