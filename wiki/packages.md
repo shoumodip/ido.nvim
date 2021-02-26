@@ -133,7 +133,7 @@ pkg.new("git_files", {
       mode = "n",
       noremap = true,
       silent = true,
-      buffer = true,
+      buffer = false,
    },
 })
 ```
@@ -201,7 +201,7 @@ pkg.list.git_files = {
       mode = "n",
       noremap = true,
       silent = true,
-      buffer = true,
+      buffer = false,
    },
 
    -- Empty table means no disabled options: {}
