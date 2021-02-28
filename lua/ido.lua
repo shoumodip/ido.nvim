@@ -210,9 +210,10 @@ ido.pkg = {
    -- A package template
    template = {
       opts = {},
+      pkg_opts = {},
       bind = {},
       disable = {},
-      main = function () end,
+      main = function (pkg_opts) end,
    },
 
    -- A package keybinding template
@@ -405,8 +406,9 @@ function ido.pkg.setup(name, opts)
       elseif opt == "bind" then
          value = vim.tbl_extend("keep", value, ido.pkg.list[name].bind)
 
+      elseif opt == "pkg_opts" then
+         value = vim.tbl_extend("keep", value, ido.pkg.list[name].pkg_opts)
       else
-
          error("Invalid option: "..opt, 2)
          return nil
       end
@@ -440,7 +442,7 @@ function ido.pkg.run(name)
    end
 
    ido.pkg.running = name
-   return ido.pkg.list[name].main()
+   return ido.pkg.list[name].main(ido.pkg.list[name].pkg_opts)
 end
 
 --- Syntactic sugar over ido.start()

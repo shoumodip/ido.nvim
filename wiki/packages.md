@@ -16,11 +16,13 @@ A package is in essence a table consisting of 4 items
 
 - `opts` The table of Ido options applied. Table, (`{}`) by default
 
+- `pkg_opts` The table of options shared with the package for internal configuration
+
 - `bind` The table of options which decide how the package is bound to a key. Table, (`{}`) by default
 
 - `disable` Disable certain options from being changed in the package by the `setup` function. Table, (`{}`) by default
 
-- `main` The entry point of the package, like `main()` in C. Function, (`function () end`) by default
+- `main` The entry point of the package, like `main()` in C. Function, (`function (pkg_opts) end`) by default
 
 ## Helper functions
 ## `pkg.new(NAME, OPTS)`
@@ -42,7 +44,7 @@ Configure an existing package. It will change the options related to the package
 If a package with that name does not exist, it will throw an error.
 
 ## `pkg.run(NAME)`
-Run a package. Basically it runs the `main` function defined in the package
+Run a package. Basically it runs the `main` function defined in the package. It passes the `pkg_opts` as a function argument to the main function when specified.
 
 - `name` The name of the package
 
@@ -73,8 +75,7 @@ Let's create a package to open any git file
 The entry point for the package
 
 ```lua
-local function git_files()
-
+local function git_files(pkg_opts)
    -- Check if the current directory is a git repo
    if os.execute("git rev-parse --is-inside-work-tree 2>/dev/null") ~= 0 then
       vim.cmd("echohl ErrorMsg | echo 'Not a git repository!' | echohl Normal")
@@ -85,7 +86,7 @@ local function git_files()
    -- Try to use `pkg.start()` in packages as shown here instead of `ido.start()`
    local file = pkg.start({
       prompt = "Git files: ",
-      items = vim.fn.systemlist("git ls-files")
+      items = vim.fn.systemlist(pkg_opts.command)
    })
 
    -- If the file name not empty, edit it
@@ -120,6 +121,11 @@ pkg.new("git_files", {
       -- Custom layout you created
       -- BTW if you enter an invalid layout here, `pkg.new()` will complain
       layout = "vertical",
+   },
+
+   -- Pkg local options passed to the main function. Optional
+   pkg_opts = {
+      command = "git ls-files"
    },
 
    -- To not bind it to anything just don't pass the bind table in the options
@@ -165,6 +171,11 @@ pkg.setup("git_files", {
       -- Use the default layout, not vertical
       layout = "default",
    },
+
+   pkg_opts = {
+     -- Add the standard Git exclusions: .git/info/exclude, .gitignore in each directory
+     command = "git ls-files --exclude-standard"
+   }
 })
 ```
 
