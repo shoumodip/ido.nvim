@@ -426,8 +426,10 @@ end
 
 --- Run a package
 -- @param name The name of the package
+-- @param pkg_opts Table with options passed to the package's main function
 -- @return exit value of the package
-function ido.pkg.run(name)
+function ido.pkg.run(name, pkg_opts)
+   pkg_opts = pkg_opts or {}
 
    -- Check the type of the name
    if type(name) ~= "string" then
@@ -442,7 +444,7 @@ function ido.pkg.run(name)
    end
 
    ido.pkg.running = name
-   return ido.pkg.list[name].main(ido.pkg.list[name].pkg_opts)
+   return ido.pkg.list[name].main(vim.tbl_extend("force", pkg_opts, ido.pkg.list[name].pkg_opts))
 end
 
 --- Syntactic sugar over ido.start()

@@ -43,10 +43,11 @@ Configure an existing package. It will change the options related to the package
 
 If a package with that name does not exist, it will throw an error.
 
-## `pkg.run(NAME)`
+## `pkg.run(NAME, PKG_OPTS)`
 Run a package. Basically it runs the `main` function defined in the package. It passes the `pkg_opts` as a function argument to the main function when specified.
 
 - `name` The name of the package
+- `pkg_opts` Runtime overrides for the `pkg_opts` specified during `pkg.setup()` and `pkg.new()`. See [Package structure](#package-structure) above.
 
 ## `pkg.start(OPTS)`
 Syntactic sugar over the `ido.start()` function. Use this when creating a package instead of `ido.start()`
