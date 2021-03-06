@@ -3,7 +3,7 @@ The core of [Ido](https://github.com/ido-nvim), the ultra-extensible narrowing f
 
 ## Basic usage
 ```vim
-:lua require("ido.main").start{items = {"red", "green", "blue"}}
+:lua require("ido").start{items = {"red", "green", "blue"}}
 ```
 
 In place of `{"red", "green", "blue"}`, place the items you wish to narrow.

@@ -55,11 +55,10 @@ function event.loop()
                local binding_module = binding:gsub("%..*$", "")
                local binding_function = binding:gsub("^.*%.", "")
 
-               require("ido."..binding_module)[binding_function]()
-
-            else
-               load(binding)()
+               binding = "require('ido."..binding_module.."')."..binding_function.."()"
             end
+
+            load(binding)()
          else
 
             -- Invalid binding, throw error

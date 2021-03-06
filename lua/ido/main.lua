@@ -142,18 +142,13 @@ function main.start(fields)
 
    -- Initialize
    main.map(options.keys)
-   require("ido.result").fetch()
    vim.cmd("set guicursor+=a:ido_hide_cursor")
 
-   if ruler_save == nil then
-      ruler_save = vim.o.ruler
-   end
-
-   vim.cmd("set noruler")
-   vim.cmd("autocmd VimResized <buffer> lua require('ido.event').async(require('ido.render').start)")
+   require(config.options.renderer).init()
 
    -- Start the event loop
    variables.looping = true
+   require("ido.result").fetch()
    require("ido.event").loop()
 
    -- Store the selected result
@@ -164,13 +159,18 @@ function main.start(fields)
    end
 
    -- Get rid of the Ido interface
-   vim.cmd("autocmd! VimResized <buffer>")
+   require(config.options.renderer).exit()
+
    vim.cmd("set guicursor-=a:ido_hide_cursor")
-   vim.api.nvim_set_option("ruler", ruler_save)
-   vim.cmd("mode")
 
    main.sandbox.variables = {}
    main.sandbox.options = {}
+
+   for index, advice_info in pairs(advice.sandbox) do
+      advice.list[advice_info.target][advice_info.hook][advice_info.index] = nil
+      advice.sandbox[index] = nil
+   end
+
    ruler_save = nil
 
    return selected

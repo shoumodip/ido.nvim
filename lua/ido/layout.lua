@@ -8,9 +8,6 @@ local layout = {}
 -- @field results_end string The decoration after the results
 -- @field suggest_start string The decoration before the suggestion
 -- @field suggest_end string The decoration after the suggestion
--- @field maximum_height number The maximum possible height of the Ido interface
--- @field dynamic_resize boolean Dynamically resize to take up the least height possible
--- @field render_sequence table The sequence to render the tokens of Ido in
 layout.default = {
    results_start = "{",
    results_selected = "",
@@ -19,15 +16,6 @@ layout.default = {
 
    suggest_start = "[",
    suggest_end = "]",
-
-   maximum_height = 1,
-   dynamic_resize = false,
-
-   render_sequence = {
-      "prompt",
-      "query",
-      "results",
-   }
 }
 
 -- Create new layout

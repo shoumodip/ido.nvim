@@ -73,7 +73,9 @@ function fzy.filter(query, items, is_case_sensitive, fuzzy_matching)
    local init_suggestion = false
    local suggestion = ""
 
-   local fuzzy_matching = fuzzy_matching == nil and true or fuzzy_matching
+   if fuzzy_matching == nil then
+      fuzzy_matching = true
+   end
 
    -- Filter the items
    for i = 1, #items do

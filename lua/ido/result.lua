@@ -1,6 +1,7 @@
 local main = require("ido.main")
-local render = require("ido.render")
+local config = require("ido.config")
 local advice = require("ido.advice")
+local event = require("ido.event")
 local fzy = require("ido.fzy")
 
 -- @module result Functions related to results
@@ -62,7 +63,12 @@ function result.fetch()
       }
    end
 
-   advice.wrap{name = "render", action = render.start}
+   advice.wrap{
+      name = "render",
+      action = function ()
+         require(config.options.renderer).main()
+      end
+   }
 
    return true
 end
@@ -89,7 +95,12 @@ function result.next()
          end
       }
 
-      advice.wrap{name = "render", action = render.start}
+      advice.wrap{
+         name = "render",
+         action = function ()
+            require(config.options.renderer).main()
+         end
+      }
    end
 
    return true
@@ -117,7 +128,12 @@ function result.prev()
          end
       }
 
-      advice.wrap{"render", render.start}
+      advice.wrap{
+         name = "render",
+         action = function ()
+            require(config.options.renderer).main()
+         end
+      }
    end
 
    return true

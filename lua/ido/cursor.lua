@@ -1,5 +1,5 @@
 local main = require("ido.main")
-local render = require("ido.render")
+local config = require("ido.config")
 local motion = require("ido.motion")
 local advice = require("ido.advice")
 
@@ -30,12 +30,16 @@ local function execute(name)
 
       advice.wrap{
          name = name,
-         action = action
+         action = function ()
+            action()
+         end
       }
 
       advice.wrap{
          name = name.."_render",
-         action = render.start
+         action = function ()
+            require(config.options.renderer).main()
+         end
       }
 
    else

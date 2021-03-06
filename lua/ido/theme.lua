@@ -99,4 +99,7 @@ theme.new{
    suggestion = {guifg = "#cc8c3c", guibg = "#161616", gui = "bold"},
 }
 
+-- Hide the cursor in Ido
+vim.cmd("highlight! ido_hide_cursor gui=reverse blend=100")
+
 return theme

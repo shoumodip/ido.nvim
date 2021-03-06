@@ -3,6 +3,7 @@ local advice = {}
 
 -- List of advices
 advice.list = {}
+advice.sandbox = {}
 
 -- Check if an advice exists or not
 -- @param options table
@@ -39,7 +40,7 @@ function advice.run(options)
       advice.action()
 
       -- Get rid of the advice if it is temporary
-      if advice.temporary then
+      if advice.temporary == 2 then
          advice_position[index] = nil
       end
    end
@@ -98,7 +99,7 @@ end
 -- @field name string The name of the advice
 -- @field action function The function which gets executed, defaults to nothing
 -- @field target string The id of the advice wrapper it points to
--- @field temporary boolean Get rid of the advice after executing it, defaults to false
+-- @field temporary number How temporary the advice is, can be 0, 1 or 2
 -- @field hook string The activation style of the advice: before, after, overwrite (default)
 -- @return nil in case of errors, else true
 function advice.add(options)
@@ -137,6 +138,14 @@ function advice.add(options)
       action = options.action,
       temporary = options.temporary
    })
+
+   if options.temporary == 1 then
+      table.insert(advice.sandbox, {
+         target = options.target,
+         hook = options.hook,
+         index = #advice.list[options.target][options.hook]
+      })
+   end
 
    return true
 end

@@ -30,7 +30,9 @@ local function execute(name)
 
       advice.wrap{
          name = name,
-         action = action
+         action = function ()
+            action()
+         end
       }
 
       advice.wrap{

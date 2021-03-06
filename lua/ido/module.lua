@@ -54,7 +54,7 @@ function module.load(options)
 
    -- More error handling
    if not module_exists then
-      print("Non existant module: "..name)
+      print("Non existant or erroneous module: "..name)
       return nil
    end
 
@@ -118,8 +118,9 @@ end
 
 -- Run a module
 -- @param name string The name of the module
+-- @param args The arguments supplied to the module
 -- @return nil in case of errors, else exit value of the module's main function
-function module.run(name)
+function module.run(name, args)
 
    -- Basic error detection
    if not name then
@@ -133,7 +134,7 @@ function module.run(name)
    end
 
    module.running = name:gsub("^([^/]+)/", "ido/%1_")
-   return module.list[name]()
+   return module.list[name](args)
 end
 
 return module

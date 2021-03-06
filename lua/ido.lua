@@ -1,37 +1,23 @@
-local main = require("ido.main")
-local theme = require("ido.theme")
-local config = require("ido.config")
-local layout = require("ido.layout")
-local module = require("ido.module")
-local advice = require("ido.advice")
-local cursor = require("ido.cursor")
-local motion = require("ido.motion")
-local delete = require("ido.delete")
-local render = require("ido.render")
-local result = require("ido.result")
-local accept = require("ido.accept")
-local package = require("ido.package")
-
 -- @module ido The aliases file
 local ido = {}
 
 -- Aliases
-ido.main = main
-ido.theme = theme
-ido.config = config
-ido.layout = layout
-ido.module = module
-ido.advice = advice
-ido.cursor = cursor
-ido.motion = motion
-ido.delete = delete
-ido.render = render
-ido.result = result
-ido.accept = accept
-ido.package = package
+ido.main = require("ido.main")
+ido.theme = require("ido.theme")
+ido.event = require("ido.event")
+ido.config = require("ido.config")
+ido.module = require("ido.module")
+ido.advice = require("ido.advice")
+ido.cursor = require("ido.cursor")
+ido.motion = require("ido.motion")
+ido.delete = require("ido.delete")
+ido.render = require("ido.render")
+ido.result = require("ido.result")
+ido.accept = require("ido.accept")
+ido.package = require("ido.package")
 
 -- The start function
-ido.start = main.start
+ido.start = ido.main.start
 
 -- Common point for setting up Ido
 -- @param options table The table of options
@@ -39,11 +25,11 @@ ido.start = main.start
 -- @field packages table The packages configuration, supplied to `package.setup`
 function ido.setup(options)
    if options.default then
-      config.set(options.default)
+      ido.config.set(options.default)
    end
 
    if options.packages then
-      package.setup(options.packages)
+      ido.package.setup(options.packages)
    end
 
    return true

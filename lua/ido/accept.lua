@@ -13,7 +13,9 @@ function accept.selected()
 
    advice.wrap{
       name = "stop_event_loop",
-      action = event.stop
+      action = function ()
+         event.stop()
+      end
    }
 
    if #main.sandbox.variables.results == 0 then
@@ -34,7 +36,12 @@ function accept.suggestion()
    if #variables.suggestion == 0 then
       advice.wrap{name = "no_suggestion"}
    elseif #variables.results == 1 then
-      advice.wrap{name = "single_result", action = accept.selected}
+      advice.wrap{
+         name = "single_result",
+         action = function ()
+            accept.selected()
+         end
+      }
    else
       advice.wrap{
          name = "append_to_query",
@@ -46,13 +53,17 @@ function accept.suggestion()
 
       advice.wrap{
          name = "fetch_results",
-         action = result.fetch
+         action = function ()
+            result.fetch()
+         end
       }
 
       if #variables.results == 1 then
          advice.wrap{
             name = "single_result_after_fetching",
-            action = accept.selected
+            action = function ()
+               accept.selected()
+            end
          }
       end
    end

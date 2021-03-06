@@ -4,6 +4,7 @@ local config = {}
 -- The default options of Ido
 -- @field prompt string The prompt of Ido, defaults to ">>>"
 -- @field layout string The layout of Ido, defaults to "default"
+-- @field renderer string The name of the renderer to be used, defaults to "ido.render"
 -- @field theme string The theme of Ido, defaults to "default"
 -- @field render table The options of rendering
 -- @field keys table Keys and their accompanied bindings
@@ -14,7 +15,7 @@ config.options = {
 
    prompt = ">>> ",
 
-   layout = "default",
+   renderer = "ido.render",
 
    theme = "default",
 
