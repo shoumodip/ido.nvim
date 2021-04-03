@@ -27,34 +27,14 @@ theme.default = {
    suggestion = {},
 }
 
--- Create new theme
--- Accepts a theme specification in the form of a table
--- The contents of the table has to be in the same format as shown
--- in the default theme
--- @param options table The specification for the theme
--- @return nil in case of errors, else true
-function theme.new(options)
-
-   -- Undefined name
-   if options.name == nil then
-      print("Name of the theme is not defined")
-      return nil
-   end
-
-   if options.name == "new" then
-      print("Invalid theme name: "..options.name)
-      return nil
-   end
-
-   -- Register the theme
-   theme[options.name] = vim.tbl_extend("keep", options, theme.default)
-   theme[options.name].name = nil
-
-   -- Generate the command for the theme
+-- Generate the command for the theme
+-- @param theme table The theme
+-- @return the vimL command string
+function theme.generate(theme)
    local command = ""
 
    -- Loop through the elements in the theme specification
-   for element, definition in pairs(theme[options.name]) do
+   for element, definition in pairs(theme) do
 
       local highlight_command = ""
       local highlight_name = "ido_"..element
@@ -82,8 +62,48 @@ function theme.new(options)
       command = command.." | highlight! "..highlight_command
    end
 
-   -- Load the theme
-   vim.cmd(command:sub(4))
+   return command:sub(4).." | highlight! ido_hide_cursor gui=reverse blend=100"
+end
+
+-- Load a theme
+-- @param theme string The name of the theme
+-- @return nil in case of errors, else true
+function theme.load(name)
+   if not theme[name] then
+      print("Non-existant theme: "..name)
+      return nil
+   end
+
+   vim.cmd(theme[name])
+
+   return true
+end
+
+-- Create new theme
+-- Accepts a theme specification in the form of a table
+-- The contents of the table has to be in the same format as shown
+-- in the default theme
+-- @param options table The specification for the theme
+-- @return nil in case of errors, else true
+function theme.new(options)
+
+   local name = options.name
+
+   -- Undefined name
+   if name == nil then
+      print("Name of the theme is not defined")
+      return nil
+   end
+
+   if name == "new" then
+      print("Invalid theme name: "..name)
+      return nil
+   end
+
+   -- Register the theme
+   options = vim.tbl_extend("keep", options, theme.default)
+   options.name = nil
+   theme[name] = theme.generate(options)
 
    return true
 end
@@ -98,8 +118,5 @@ theme.new{
    selected   = {guifg = "#d79921", guibg = "#161616"},
    suggestion = {guifg = "#cc8c3c", guibg = "#161616", gui = "bold"},
 }
-
--- Hide the cursor in Ido
-vim.cmd("highlight! ido_hide_cursor gui=reverse blend=100")
 
 return theme

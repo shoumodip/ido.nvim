@@ -1,5 +1,4 @@
-require("ido.theme")
-
+local theme = require("ido.theme")
 local module = require("ido.module")
 local advice = require("ido.advice")
 local config = require("ido.config")
@@ -144,7 +143,8 @@ function main.start(fields)
    main.map(options.keys)
    vim.cmd("set guicursor+=a:ido_hide_cursor")
 
-   require(config.options.renderer).init()
+   require(options.renderer).init()
+   theme.load(options.theme)
 
    -- Start the event loop
    variables.looping = true
@@ -159,7 +159,7 @@ function main.start(fields)
    end
 
    -- Get rid of the Ido interface
-   require(config.options.renderer).exit()
+   require(options.renderer).exit()
 
    vim.cmd("set guicursor-=a:ido_hide_cursor")
 
