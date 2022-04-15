@@ -31,6 +31,7 @@ $ git submodule update --init --recursive
 | --------------------- | ------------------------------------------------------------------------------------- |
 | `:Ido std.browse`     | Browse the filesystem                                                                 |
 | `:Ido std.buffer`     | Switch buffers                                                                        |
+| `:Ido std.filetypes`  | Switch filetypes for the current buffer                                               |
 | `:Ido std.find_files` | Find files recursively under the current directory                                    |
 | `:Ido std.git_files`  | Find files in a git repository                                                        |
 | `:Ido std.git_diff`   | Find files with changes                                                               |
