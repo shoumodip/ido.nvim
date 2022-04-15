@@ -74,6 +74,13 @@ function std.buffer()
     end
 end
 
+function std.filetypes()
+    local filetype = ido.start(vim.fn.getcompletion("", "filetype"), {prompt = "Filetypes: "})
+    if filetype then
+        vim.cmd("setlocal filetype="..filetype)
+    end
+end
+
 function std.find_files()
     local file = ido.start(vim.split(vim.fn.glob("**"), "\n"))
     if file then
