@@ -31,11 +31,13 @@ $ git submodule update --init --recursive
 | --------------------- | ------------------------------------------------------------------------------------- |
 | `:Ido std.browse`     | Browse the filesystem                                                                 |
 | `:Ido std.buffer`     | Switch buffers                                                                        |
-| `:Ido std.find_files` | Find files recursively                                                                |
+| `:Ido std.find_files` | Find files recursively under the current directory                                    |
 | `:Ido std.git_files`  | Find files in a git repository                                                        |
 | `:Ido std.git_diff`   | Find files with changes                                                               |
 | `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
 | `:Ido std.git_status` | Find files with git changes                                                           |
+
+Ido uses standard [Readline Keybindings](https://spin.atomicobject.com/2017/11/10/readline-productivity/) by default.
 
 ## Documentation
 TBD
