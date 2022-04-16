@@ -8,18 +8,22 @@ function std.browse()
         cwd = cwd.."/"
     end
 
+    local function list()
+        return vim.fn.systemlist("ls -pA '"..cwd:gsub("'", "'\"'\"'").."'")
+    end
+
     local function update()
         if cwd:sub(-1) ~= "/" then
             cwd = cwd.."/"
         end
 
-        ido.state.items = vim.fn.systemlist("ls -pA "..cwd)
+        ido.state.items = list()
         ido.state.modified = true
         ido.state.options.prompt = "Browse: "..cwd:gsub(vim.env.HOME, "~")
         ido.state.query = {lhs = "", rhs = ""}
     end
     
-    local file = ido.start(vim.fn.systemlist("ls -pA "..cwd), {
+    local file = ido.start(list(), {
         prompt = "Browse: "..cwd:gsub(vim.env.HOME, "~"),
 
         accept_query = true,
