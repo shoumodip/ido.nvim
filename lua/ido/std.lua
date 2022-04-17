@@ -72,7 +72,21 @@ function std.browse()
 end
 
 function std.buffer()
-    local buffer = ido.start(vim.fn.getcompletion("", "buffer"), {prompt = "Buffer: "})
+    local list = vim.fn.getcompletion("", "buffer")
+    local current = vim.fn.bufname()
+
+    for i, name in ipairs(list) do
+        if name == current then
+            table.remove(list, i)
+        end
+    end
+
+    table.sort(list, function (a, b)
+        return vim.fn.getbufinfo(a)[1].lastused > vim.fn.getbufinfo(b)[1].lastused
+    end)
+    table.insert(list, current)
+
+    local buffer = ido.start(list, {prompt = "Buffer: "})
     if buffer then
         vim.cmd("buffer "..buffer)
     end
