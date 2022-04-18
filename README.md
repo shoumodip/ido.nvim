@@ -285,7 +285,7 @@ local positions, score = ido.internal.match("foo", "foobar")
 ```
 
 ### `ido.internal.filter()`
-Filter the result from the items.
+Filter the results from the items.
 
 ```lua
 ido.internal.filter()
