@@ -165,23 +165,24 @@ function ido.internal.filter()
     end
 end
 
-function ido.internal.keystring(key)
+function ido.internal.keystring(key, inside)
     if type(key) == "number" then
         if key == 13 then
-            return "RET"
+            return inside and "cr" or "<cr>"
         elseif key == 27 then
-            return "ESC"
+            return inside and "esc" or "<esc>"
         elseif key <= 26 then
-            return "C-"..string.char(("a"):byte() + key - 1)
+            assert(not inside)
+            return "<c-"..string.char(("a"):byte() + key - 1)..">"
         else
             return string.char(key)
         end
     end
 
     if key == "€kb" then
-        return "BS"
+        return inside and "bs" or "<bs>"
     elseif key == "€kD" then
-        return "DEL"
+        return inside and "del" or "<del>"
     else
         key = key:sub(4)
 
@@ -189,7 +190,8 @@ function ido.internal.keystring(key)
             key = key:byte()
         end
 
-        return "M-"..ido.internal.keystring(key)
+        assert(not inside)
+        return "<a-"..ido.internal.keystring(key, true)..">"
     end
 end
 
@@ -347,29 +349,29 @@ ido.setup {
     render = ido.internal.render,
 
     mappings = {
-        ["BS"] = ido.delete.char.backward,
-        ["DEL"] = ido.delete.char.forward,
-        ["ESC"] = ido.quit,
-        ["RET"] = ido.done,
+        ["<bs>"] = ido.delete.char.backward,
+        ["<del>"] = ido.delete.char.forward,
+        ["<esc>"] = ido.quit,
+        ["<cr>"] = ido.done,
 
-        ["C-d"] = ido.delete.char.forward,
-        ["C-k"] = ido.delete.char.backward,
+        ["<c-d>"] = ido.delete.char.forward,
+        ["<c-k>"] = ido.delete.char.backward,
 
-        ["M-d"] = ido.delete.word.forward,
-        ["M-k"] = ido.delete.word.backward,
-        ["M-BS"] = ido.delete.word.backward,
+        ["<c-f>"] = ido.motion.char.forward,
+        ["<c-b>"] = ido.motion.char.backward,
 
-        ["C-f"] = ido.motion.char.forward,
-        ["C-b"] = ido.motion.char.backward,
+        ["<a-f>"] = ido.motion.word.forward,
+        ["<a-b>"] = ido.motion.word.backward,
 
-        ["M-f"] = ido.motion.word.forward,
-        ["M-b"] = ido.motion.word.backward,
+        ["<a-d>"] = ido.delete.word.forward,
+        ["<a-k>"] = ido.delete.word.backward,
+        ["<a-bs>"] = ido.delete.word.backward,
 
-        ["C-a"] = ido.motion.line.backward,
-        ["C-e"] = ido.motion.line.forward,
+        ["<c-a>"] = ido.motion.line.backward,
+        ["<c-e>"] = ido.motion.line.forward,
 
-        ["C-n"] = ido.next,
-        ["C-p"] = ido.prev
+        ["<c-n>"] = ido.next,
+        ["<c-p>"] = ido.prev
     },
 
     hooks = {}

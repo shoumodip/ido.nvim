@@ -38,7 +38,26 @@ $ git submodule update --init --recursive
 | `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
 | `:Ido std.git_status` | Find files with git changes                                                           |
 
-Ido uses standard [Readline Keybindings](https://spin.atomicobject.com/2017/11/10/readline-productivity/) by default.
+## Keybindings
+| Key                 | Description               |
+| ------------------- | ------------------------- |
+| <kbd>\<bs\></kbd>   | Delete character backward |
+| <kbd>\<del\></kbd>  | Delete character forward  |
+| <kbd>\<esc\></kbd>  | Quit                      |
+| <kbd>\<cr\></kbd>   | Accept the selection      |
+| <kbd>\<c-d\></kbd>  | Delete character forward  |
+| <kbd>\<c-k\></kbd>  | Delete character backward |
+| <kbd>\<c-f\></kbd>  | Move character forward    |
+| <kbd>\<c-b\></kbd>  | Move character backward   |
+| <kbd>\<a-f\></kbd>  | Move word forward         |
+| <kbd>\<a-b\></kbd>  | Move word backward        |
+| <kbd>\<a-d\></kbd>  | Delete word forward       |
+| <kbd>\<a-k\></kbd>  | Delete word backward      |
+| <kbd>\<a-bs\></kbd> | Delete word backward      |
+| <kbd>\<c-a\></kbd>  | Move line backward        |
+| <kbd>\<c-e\></kbd>  | Move line forward         |
+| <kbd>\<c-n\></kbd>  | Select next item          |
+| <kbd>\<c-p\></kbd>  | Select previous item      |
 
 ## Documentation
 TBD
