@@ -23,7 +23,7 @@ $ git submodule update --init --recursive
 
 ## Usage
 ```vim
-:lua require("ido").start({"red", "green", "blue"})
+:lua print(require("ido").start({"red", "green", "blue"}))
 ```
 
 ## Keybindings
@@ -75,7 +75,50 @@ achieve this.
 The current directory of the browse function is displayed in the prompt.
 
 **INFO:** The image at the top of this document is actually the `std.browse`
-function in action!
+function in action
 
-## Documentation
+## Configuration
+Ido is configured through a dedicated `setup` function. It accepts a table of
+options.
+
+| Option       | Type                      | Description                                 | Default                            |
+| ------------ | ------------------------- | ------------------------------------------- | ---------------------------------- |
+| `prompt`     | `string`                  | The prompt of the ido selector              | `>>>`                              |
+| `ignorecase` | `boolean`                 | Whether matching should be case insensitive | `ignorecase` setting of Neovim     |
+| `render`     | `function`                | The function used for rendering Ido         | `ido.internal.render`              |
+| `mappings`   | `table[string]{function}` | The keybindings of Ido                      | As described [above](#Keybindings) |
+| `hooks`      | `table[string]{function}` | The [hooks](#Hooks)                         | As described [above](#Keybindings) |
+
+**NOTE:** The key to be bound to in the `mappings` option ***MUST BE ALL LOWER-CASE***
+
+### Configuration Demo
+```lua
+local ido = require("ido")
+ido.setup {
+    prompt = "Ido: ",
+    ignorecase = false,
+    mappings = {
+        ["<c-k>"] = ido.delete.line.backward
+    }
+}
+```
+
+**INFO:** Ido API described [here](#API).
+
+## Temporary Configuration
+Ido also supports temporary configuration, wherein the configuration lasts for
+a single run of the selector. Such configuration are passed via the optional
+second argument of `ido.start()`
+
+### Temporary Configuration Demo
+```lua
+require("ido").start(vim.split(vim.fn.glob("**"), "\n"), {
+    prompt = "Find Files: ",
+    mappings = {
+        ["<c-k>"] = ido.delete.line.backward
+    }
+})
+```
+
+## API
 TBD
