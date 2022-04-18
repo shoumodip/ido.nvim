@@ -30,17 +30,33 @@ function std.browse()
 
         mappings = {
             ["/"] = function ()
-                local nwd = ""
+                local query = ido.internal.query()
 
-                if #ido.state.results > 0 then
-                    nwd = ido.state.results[ido.state.current][1]
-                else
-                    nwd = ido.internal.query()
-                end
-
-                if vim.fn.isdirectory(cwd..nwd) == 1 then
-                    cwd = cwd..nwd
+                if query == "" then
+                    cwd = "/"
                     update()
+                else
+                    local nwd = ""
+
+                    if #ido.state.results > 0 then
+                        nwd = ido.state.results[ido.state.current][1]
+                    else
+                        nwd = query
+                    end
+
+                    if vim.fn.isdirectory(cwd..nwd) == 1 then
+                        cwd = cwd..nwd
+                        update()
+                    end
+                end
+            end,
+
+            ["~"] = function ()
+                if ido.internal.query() == "" then
+                    cwd = vim.env.HOME
+                    update()
+                else
+                    ido.internal.insert("~")
                 end
             end
         },

@@ -46,6 +46,11 @@ function ido.internal.query()
     return ido.state.query.lhs..ido.state.query.rhs
 end
 
+function ido.internal.insert(char)
+    ido.state.query.lhs = ido.state.query.lhs..char
+    ido.state.modified = true
+end
+
 function ido.motion.define(name, action)
     ido.motion[name] = action
     ido.delete[name] = {
@@ -316,8 +321,7 @@ function ido.start(items, init)
             if action then
                 action()
             elseif type(key) == "number" and key >= 32 and key <= 126 then
-                ido.state.query.lhs = ido.state.query.lhs..string.char(key)
-                ido.state.modified = true
+                ido.internal.insert(string.char(key))
             end
         else
             ido.state.active = false
