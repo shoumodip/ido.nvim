@@ -10,19 +10,19 @@ function ido.setup(config)
     ido.options = vim.tbl_deep_extend("force", ido.options, config or {})
 end
 
-function ido.internal.get(field)
-    if ido.state.options and ido.state.options[field] then
-        return ido.state.options[field]
+function ido.internal.get(option)
+    if ido.state.options and ido.state.options[option] then
+        return ido.state.options[option]
     else
-        return ido.options[field]
+        return ido.options[option]
     end
 end
 
-function ido.internal.set(field, value)
-    if ido.state.options and ido.state.options[field] then
-        ido.state.options[field] = value
+function ido.internal.set(option, value)
+    if ido.state.options and ido.state.options[option] then
+        ido.state.options[option] = value
     else
-        ido.options[field] = value
+        ido.options[option] = value
     end
 end
 
@@ -258,7 +258,7 @@ function ido.internal.render()
     vim.api.nvim_echo(output, false, {})
 end
 
-function ido.quit()
+function ido.stop()
     ido.state.active = false
     ido.state.current = nil
 end
@@ -351,7 +351,7 @@ ido.setup {
     mappings = {
         ["<bs>"] = ido.delete.char.backward,
         ["<del>"] = ido.delete.char.forward,
-        ["<esc>"] = ido.quit,
+        ["<esc>"] = ido.stop,
         ["<cr>"] = ido.done,
 
         ["<c-d>"] = ido.delete.char.forward,

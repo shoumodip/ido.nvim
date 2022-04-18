@@ -81,13 +81,14 @@ function in action
 Ido is configured through a dedicated `setup` function. It accepts a table of
 options.
 
-| Option       | Type                      | Description                                 | Default                            |
-| ------------ | ------------------------- | ------------------------------------------- | ---------------------------------- |
-| `prompt`     | `string`                  | The prompt of the ido selector              | `>>>`                              |
-| `ignorecase` | `boolean`                 | Whether matching should be case insensitive | `ignorecase` setting of Neovim     |
-| `render`     | `function`                | The function used for rendering Ido         | `ido.internal.render`              |
-| `mappings`   | `table[string]{function}` | The keybindings of Ido                      | As described [above](#Keybindings) |
-| `hooks`      | `table[string]{function}` | The [hooks](#Hooks)                         | `{}`                               |
+| Option         | Type                      | Description                                           | Default                            |
+| -------------- | ------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| `prompt`       | `string`                  | The prompt of the ido selector                        | `>>>`                              |
+| `ignorecase`   | `boolean`                 | Whether matching should be case insensitive           | `ignorecase` setting of Neovim     |
+| `accept_query` | `boolean`                 | If no items match, accept the query on pressing enter | false                              |
+| `render`       | `function`                | The function used for rendering Ido                   | `ido.internal.render`              |
+| `mappings`     | `table[string]{function}` | The keybindings of Ido                                | As described [above](#Keybindings) |
+| `hooks`        | `table[string]{function}` | The [hooks](#Hooks)                                   | `{}`                               |
 
 **NOTE:** The key to be bound to in the `mappings` option ***MUST BE ALL LOWER-CASE***
 
@@ -121,5 +122,233 @@ ido.start(vim.split(vim.fn.glob("**"), "\n"), {
 })
 ```
 
+## Hooks
+Hooks are like `autocmd` in Vim. They get executed on certain events.
+
+| Event                     | Description                                                    |
+| ------------------------- | -------------------------------------------------------------- |
+| `delete_forward_nothing`  | If a forward delete operation was made with nothing to delete  |
+| `delete_backward_nothing` | If a backward delete operation was made with nothing to delete |
+| `filter_items`            | Just before filtering the items                                |
+| `event_start`             | Just before the event loop starts                              |
+| `event_stop`              | Just after the event loop stops                                |
+
 ## API
-TBD
+```lua
+local ido = require("ido")
+```
+
+This section describes the variables and functions exposed through the `ido`
+module.
+
+### `ido.state.active`
+Whether the filtering is active.
+
+```lua
+ido.state.active = false
+```
+
+### `ido.state.items`
+The items being filtered upon.
+
+```lua
+ido.state.items = {"red", "green", "blue"}
+```
+
+### `ido.state.query.lhs`
+The part of the query on the left side of the cursor.
+
+```lua
+ido.state.query.lhs = "~"
+```
+
+### `ido.state.query.rhs`
+The part of the query on the right side of the cursor.
+
+```lua
+ido.state.query.rhs = "/"
+```
+
+### `ido.state.modified`
+Whether the filtered results need to be re-filtered.
+
+```lua
+ido.state.modified = true
+```
+
+### `ido.state.results`
+The items which match the query.
+
+```lua
+ido.state.results = vim.split(vim.fn.glob("**"), "\n")
+```
+
+### `ido.state.current`
+The current selected item in the results.
+
+```lua
+print(ido.state.results[ido.state.current])
+```
+
+### `ido.state.options`
+The temporary options.
+
+```lua
+ido.state.options = {
+    prompt = "Browse: "
+}
+```
+
+### `ido.internal.get(option)`
+Get the value of the option named `option`.
+
+```lua
+print(ido.internal.get("prompt"))
+```
+
+### `ido.internal.set(option, value)`
+Set the value of the option named `option` to `value`.
+
+```lua
+ido.internal.set("prompt", "Filter: ")
+```
+
+### `ido.internal.key(key)`
+Get the function associated with `key`.
+
+```lua
+ido.internal.key("<esc>")()
+```
+
+### `ido.internal.hook(name)`
+Execute the hook named `name`.
+
+```lua
+ido.internal.hook("event_start")
+```
+
+### `ido.internal.query()`
+Get the current query.
+
+```lua
+if ido.internal.query() == "yes" then
+    ido.internal.done() -- Same as pressing enter
+end
+```
+
+### `ido.internal.insert(char)`
+Insert a character into the query.
+
+```lua
+ido.internal.insert('a')
+```
+
+### `ido.motion.define(name, action)`
+Define motion and delete operations called `name` with a forward action of
+`action.forward` and backward action of `action.backward`.
+
+The following operations will be generated.
+
+| Operation                    | Description                                           |
+| ---------------------------- | ----------------------------------------------------- |
+| `ido.motion.<name>.forward`  | The forward motion, basically `action.forward`        |
+| `ido.motion.<name>.backward` | The backward motion, basically `action.backward`      |
+| `ido.delete.<name>.forward`  | Delete the query range covered by the forward motion  |
+| `ido.delete.<name>.backward` | Delete the query range covered by the backward motion |
+
+```lua
+ido.motion.define("two_char", {
+    forward = function ()
+        if ido.state.query.rhs:len() > 1 then
+            ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs:sub(1, 2)
+            ido.state.query.rhs = ido.state.query.rhs:sub(3)
+        end
+    end,
+
+    backward = function ()
+        if ido.state.query.lhs:len() > 1 then
+            ido.state.query.rhs = ido.state.query.lhs:sub(-2)..ido.state.query.rhs
+            ido.state.query.lhs = ido.state.query.lhs:sub(1, -3)
+        end
+    end
+})
+
+ido.motion.two_char.forward()
+ido.delete.two_char.backward()
+```
+
+### `ido.internal.match(query, item)`
+Get the fuzzy match positions and the score for finding `query` in `item`.
+
+```lua
+local positions, score = ido.internal.match("foo", "foobar")
+```
+
+### `ido.internal.filter()`
+Filter the result from the items.
+
+```lua
+ido.internal.filter()
+```
+
+### `ido.internal.keystring(key, inside)`
+Convert `key` in format of `getchar()`, into string representing vim mapping
+syntax.
+
+If optional argument `inside` is truthy, it means this function has been called
+recursively.
+
+```lua
+print(ido.internal.keystring(112))
+```
+
+### `ido.internal.render()`
+The default renderer of Ido.
+
+```lua
+ido.internal.render()
+```
+
+### `ido.stop()`
+Stop the Ido event loop. Same as pressing `<esc>`.
+
+```lua
+ido.internal.stop()
+```
+
+### `ido.done()`
+Stop the Ido event loop and accept the selected item. Same as pressing `<cr>`.
+
+```lua
+ido.internal.done()
+```
+
+### `ido.next()`
+Select the next result. If there is no next item, wrap around to the first
+result.
+
+```lua
+ido.internal.next()
+```
+
+### `ido.prev()`
+Select the previous result. If there is no previous item, wrap around to the
+last result.
+
+```lua
+ido.internal.prev()
+```
+
+### `ido.start(items, init)`
+Start the Ido selector with items from `items` and optional argument `init`
+providing the temporary configuration.
+
+- Returns `nil` if `<esc>` was pressed (ie, `ido.action.quit()` was called).
+- Returns the selected item if `<cr>` was pressed (ie, `ido.action.done()` was called).
+
+```lua
+local file = require("ido").start(vim.split(vim.fn.glob("**"), "\n"))
+if file then
+    vim.cmd("edit "..file)
+end
+```
