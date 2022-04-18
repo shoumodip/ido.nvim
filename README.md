@@ -112,7 +112,8 @@ second argument of `ido.start()`
 
 ### Temporary Configuration Demo
 ```lua
-require("ido").start(vim.split(vim.fn.glob("**"), "\n"), {
+local ido = require("ido")
+ido.start(vim.split(vim.fn.glob("**"), "\n"), {
     prompt = "Find Files: ",
     mappings = {
         ["<c-k>"] = ido.delete.line.backward
