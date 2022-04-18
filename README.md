@@ -26,18 +26,6 @@ $ git submodule update --init --recursive
 :lua require("ido").start({"red", "green", "blue"})
 ```
 
-## Quick Start
-| Command               | Description                                                                           |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| `:Ido std.browse`     | Browse the filesystem                                                                 |
-| `:Ido std.buffer`     | Switch buffers                                                                        |
-| `:Ido std.filetypes`  | Switch filetypes for the current buffer                                               |
-| `:Ido std.find_files` | Find files recursively under the current directory                                    |
-| `:Ido std.git_files`  | Find files in a git repository                                                        |
-| `:Ido std.git_diff`   | Find files with changes                                                               |
-| `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
-| `:Ido std.git_status` | Find files with git changes                                                           |
-
 ## Keybindings
 | Key                 | Description               |
 | ------------------- | ------------------------- |
@@ -58,6 +46,36 @@ $ git submodule update --init --recursive
 | <kbd>\<c-e\></kbd>  | Move line forward         |
 | <kbd>\<c-n\></kbd>  | Select next item          |
 | <kbd>\<c-p\></kbd>  | Select previous item      |
+
+## Quick Start
+| Command               | Description                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `:Ido std.browse`     | Browse the filesystem                                                                 |
+| `:Ido std.buffer`     | Switch buffers                                                                        |
+| `:Ido std.filetypes`  | Switch filetypes for the current buffer                                               |
+| `:Ido std.find_files` | Find files recursively under the current directory                                    |
+| `:Ido std.git_files`  | Find files in a git repository                                                        |
+| `:Ido std.git_diff`   | Find files with changes                                                               |
+| `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
+| `:Ido std.git_status` | Find files with git changes                                                           |
+
+**NOTE:** `:Ido <file>.<function>` is shorthand for `:lua require('ido.<file>').<function>()`
+
+## Ido Browse
+The `std.browse` function is a beast of a selector. It can traverse the
+filesystem, create and open files. It makes use of a few extra keybindings to
+achieve this.
+
+| Key                | Description                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| <kbd>\<bs\></kbd>  | If the query is empty, go back a directory. Otherwise normal behaviour                    |
+| <kbd>/</kbd>       | If the query is empty, go to root. Otherwise enter the selected item if it is a directory |
+| <kbd>~</kbd>       | If the query is empty, go to home. Otherwise normal behaviour                             |
+
+The current directory of the browse function is displayed in the prompt.
+
+**INFO:** The image at the top of this document is actually the `std.browse`
+function in action!
 
 ## Documentation
 TBD
