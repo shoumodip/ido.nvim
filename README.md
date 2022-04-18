@@ -59,7 +59,7 @@ $ git submodule update --init --recursive
 | `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
 | `:Ido std.git_status` | Find files with git changes                                                           |
 
-**NOTE:** `:Ido <file>.<function>` is shorthand for `:lua require('ido.<file>').<function>()`
+**NOTE:** `:Ido <file>.<function>` is the same as `:lua require('ido.<file>').<function>()`
 
 ## Ido Browse
 The `std.browse` function is a beast of a selector. It can traverse the
