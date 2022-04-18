@@ -87,7 +87,7 @@ options.
 | `ignorecase` | `boolean`                 | Whether matching should be case insensitive | `ignorecase` setting of Neovim     |
 | `render`     | `function`                | The function used for rendering Ido         | `ido.internal.render`              |
 | `mappings`   | `table[string]{function}` | The keybindings of Ido                      | As described [above](#Keybindings) |
-| `hooks`      | `table[string]{function}` | The [hooks](#Hooks)                         | As described [above](#Keybindings) |
+| `hooks`      | `table[string]{function}` | The [hooks](#Hooks)                         | `{}`                               |
 
 **NOTE:** The key to be bound to in the `mappings` option ***MUST BE ALL LOWER-CASE***
 
