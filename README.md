@@ -1,7 +1,7 @@
 # ido.nvim
 An Emacs inspired narrowing system for Neovim
 
-![Ido Browse](img/browse.jpeg)
+![Ido Browse](img/demo.jpeg)
 
 ## Install
 Use your plugin manager of choice to install this plugin

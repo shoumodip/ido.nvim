@@ -196,7 +196,7 @@ function ido.internal.keystring(key, inside)
 end
 
 function ido.internal.render()
-    local capacity = 2 * vim.opt.columns:get()
+    local capacity = vim.opt.columns:get()
     local space = capacity
     local output = {}
 
@@ -216,7 +216,7 @@ function ido.internal.render()
 
     draw(ido.internal.get("prompt"), "idoPrompt")
     draw(ido.state.query.lhs)
-    
+
     if #ido.state.query.rhs > 0 then
         draw(ido.state.query.rhs:sub(1, 1), "Cursor")
         draw(ido.state.query.rhs:sub(2).." ")
@@ -300,9 +300,6 @@ function ido.start(items, init)
         options = init
     }
 
-    local cmdheight = vim.o.cmdheight
-    vim.o.cmdheight = 2
-
     vim.opt.guicursor:remove("a:Cursor")
     vim.opt.guicursor:append("a:idoHideCursor")
 
@@ -334,7 +331,6 @@ function ido.start(items, init)
     vim.opt.guicursor:remove("a:idoHideCursor")
     vim.opt.guicursor:append("a:Cursor")
 
-    vim.o.cmdheight = 1
     print(" ")
     vim.cmd("redraw")
 
