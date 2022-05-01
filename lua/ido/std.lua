@@ -88,19 +88,24 @@ function std.browse()
 end
 
 function std.buffer_sort(list)
-    local current = vim.fn.bufname()
+    local current = vim.fn.fnamemodify(vim.fn.bufname(), ":p")
+    local found_current = false
 
     for i, name in ipairs(list) do
-        if vim.fn.fnamemodify(name, ":p") == vim.fn.fnamemodify(current, ":p") then
+        if vim.fn.fnamemodify(name, ":p") == current then
             table.remove(list, i)
             current = name
+            found_current = true
         end
     end
 
     table.sort(list, function (a, b)
         return vim.fn.getbufinfo(a)[1].lastused > vim.fn.getbufinfo(b)[1].lastused
     end)
-    table.insert(list, current)
+
+    if found_current then
+        table.insert(list, current)
+    end
 end
 
 function std.buffer()
