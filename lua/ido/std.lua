@@ -91,8 +91,9 @@ function std.buffer_sort(list)
     local current = vim.fn.bufname()
 
     for i, name in ipairs(list) do
-        if name == current then
+        if vim.fn.fnamemodify(name, ":p") == vim.fn.fnamemodify(current, ":p") then
             table.remove(list, i)
+            current = name
         end
     end
 
