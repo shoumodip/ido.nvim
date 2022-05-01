@@ -162,7 +162,7 @@ end
 function std.git_log()
     if std.check_inside_git("git_log") then
         if vim.fn.exists("*FugitiveFind") == 0 then
-            vim.api.nvim_err_writeln("git_log: vim-fugitive not installed")
+            vim.api.nvim_err_writeln("git_log: tpope/vim-fugitive not installed")
         else
             local commit = ido.start(vim.fn.systemlist("git log --format='%h%d %s %cr'"), {prompt = "Git Log: "})
             if commit then
