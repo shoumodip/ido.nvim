@@ -22,7 +22,7 @@ function std.browse()
         ido.state.options.prompt = "Browse: "..cwd:gsub(vim.env.HOME, "~")
         ido.state.query = {lhs = "", rhs = ""}
     end
-    
+
     local file = ido.start(list(), {
         prompt = "Browse: "..cwd:gsub(vim.env.HOME, "~"),
 
@@ -87,8 +87,7 @@ function std.browse()
     end
 end
 
-function std.buffer()
-    local list = vim.fn.getcompletion("", "buffer")
+function std.buffer_sort(list)
     local current = vim.fn.bufname()
 
     for i, name in ipairs(list) do
@@ -101,6 +100,11 @@ function std.buffer()
         return vim.fn.getbufinfo(a)[1].lastused > vim.fn.getbufinfo(b)[1].lastused
     end)
     table.insert(list, current)
+end
+
+function std.buffer()
+    local list = vim.fn.getcompletion("", "buffer")
+    std.buffer_sort(list)
 
     local buffer = ido.start(list, {prompt = "Buffer: "})
     if buffer then
