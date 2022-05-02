@@ -121,8 +121,12 @@ function std.find_files()
     end
 end
 
+function std.is_inside_git()
+    return os.execute("git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null") == 0
+end
+
 function std.check_inside_git(name)
-    if os.execute("git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null") == 0 then
+    if std.is_inside_git() then
         return true
     else
         vim.api.nvim_err_writeln(name..": working directory does not belong to a Git repository")
