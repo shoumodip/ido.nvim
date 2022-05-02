@@ -115,7 +115,7 @@ function std.filetypes()
 end
 
 function std.find_files()
-    local file = ido.start(vim.split(vim.fn.glob("**"), "\n"))
+    local file = ido.start(vim.split(vim.fn.glob("**"), "\n"), {prompt = "Files: ", accept_query = true})
     if file then
         vim.cmd("edit "..file)
     end
@@ -136,7 +136,11 @@ end
 
 function std.git_files()
     if std.check_inside_git("std.git_files") then
-        local file = ido.start(vim.fn.systemlist("git ls-files --cached --others --exclude-standard"), {prompt = "Git Files: "})
+        local file = ido.start(vim.fn.systemlist("git ls-files --cached --others --exclude-standard"), {
+            prompt = "Git Files: ",
+            accept_query = true
+        })
+
         if file then
             vim.cmd("edit "..file)
         end
