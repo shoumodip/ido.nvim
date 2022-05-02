@@ -66,11 +66,11 @@ The `std.browse` function is a beast of a selector. It can traverse the
 filesystem, create and open files. It makes use of a few extra keybindings to
 achieve this.
 
-| Key                | Description                                                                               |
-| ------------------ | ----------------------------------------------------------------------------------------- |
-| <kbd>\<bs\></kbd>  | If the query is empty, go back a directory. Otherwise normal behaviour                    |
-| <kbd>/</kbd>       | If the query is empty, go to root. Otherwise enter the selected item if it is a directory |
-| <kbd>~</kbd>       | If the query is empty, go to home. Otherwise normal behaviour                             |
+| Key                | Description                                                            |
+| ------------------ | ---------------------------------------------------------------------- |
+| <kbd>\<bs\></kbd>  | If the query is empty, go back a directory. Otherwise normal behaviour |
+| <kbd>/</kbd>       | Enter the selected item if it is a directory                           |
+| <kbd>~</kbd>       | If the query is empty, go to home. Otherwise normal behaviour          |
 
 The current directory of the browse function is displayed in the prompt.
 
