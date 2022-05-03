@@ -26,13 +26,6 @@ $ git submodule update --init --recursive
 :lua print(require("ido").start({"red", "green", "blue"}))
 ```
 
-## Vertical Mode
-![Vertical Mode](img/vertical.jpeg)
-
-```vim
-:lua require("ido").setup{render = require("ido.render").vertical}
-```
-
 ## Keybindings
 | Key                 | Description               |
 | ------------------- | ------------------------- |
@@ -83,6 +76,13 @@ The current directory of the browse function is displayed in the prompt.
 
 **INFO:** The image at the top of this document is actually the `std.browse`
 function in action
+
+## Vertical Mode
+![Vertical Mode](img/vertical.jpeg)
+
+```vim
+:lua require("ido").setup{render = require("ido.render").vertical}
+```
 
 ## Configuration
 Ido is configured through a dedicated `setup` function. It accepts a table of
