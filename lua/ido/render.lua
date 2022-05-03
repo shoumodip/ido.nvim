@@ -48,6 +48,7 @@ render.vertical = {
 function render.vertical.init()
     vim.cmd("new")
     vim.api.nvim_buf_set_option(0, "buftype", "nofile")
+    vim.api.nvim_buf_set_option(0, "bufhidden", "delete")
     vim.api.nvim_win_set_option(0, "statusline", "Ido")
 
     render.vertical.space = vim.fn.winheight(0)
