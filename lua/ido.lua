@@ -196,37 +196,23 @@ function ido.internal.keystring(key, inside)
 end
 
 function ido.internal.render()
-    local capacity = vim.opt.columns:get()
-    local space = capacity
     local output = {}
 
-    local function draw(text, highlight)
-        if space == 0 then
-            return false
-        end
+    local draw = ido.internal.get("render").text
 
-        if text:len() + 1 > space then
-            text = text:sub(1, space - 1)
-        end
-        space = space - text:len()
-        table.insert(output, {text, highlight or "Normal"})
-
-        return true
-    end
-
-    draw(ido.internal.get("prompt"), "idoPrompt")
-    draw(ido.state.query.lhs)
+    draw(output, ido.internal.get("prompt"), "idoPrompt")
+    draw(output, ido.state.query.lhs)
 
     if #ido.state.query.rhs > 0 then
-        draw(ido.state.query.rhs:sub(1, 1), "Cursor")
-        draw(ido.state.query.rhs:sub(2).." ")
+        draw(output, ido.state.query.rhs:sub(1, 1), "Cursor")
+        draw(output, ido.state.query.rhs:sub(2).." ")
     else
-        draw(" ", "Cursor")
+        draw(output, " ", "Cursor")
     end
 
     local results = #ido.state.results
     if results > 0 then
-        if draw(ido.state.results[ido.state.current][1], "idoSelected") and results > 1 then
+        if draw(output, ido.state.results[ido.state.current][1], "idoSelected") and results > 1 then
             local i = ido.state.current
 
             while true do
@@ -240,22 +226,19 @@ function ido.internal.render()
                     break
                 end
 
-                if not draw(" | ", "idoSeparator") then
+                if not ido.internal.get("render").delim(output) then
                     break
                 end
 
-                if not draw(ido.state.results[i][1]) then
+                if not draw(output, ido.state.results[i][1]) then
                     break
                 end
             end
         end
     end
 
-    if space > 0 then
-        draw(string.rep(" ", space - 1))
-    end
-
-    vim.api.nvim_echo(output, false, {})
+    ido.internal.get("render").done(output)
+    output = {}
 end
 
 function ido.stop()
@@ -303,15 +286,13 @@ function ido.start(items, init)
     vim.opt.guicursor:remove("a:Cursor")
     vim.opt.guicursor:append("a:idoHideCursor")
 
-    ido.internal.hook("event_start")
+    ido.internal.get("render").init()
     while ido.state.active do
         if ido.state.modified then
             ido.internal.filter()
         end
 
-        print(" ")
-        vim.cmd("redraw")
-        ido.internal.get("render")()
+        ido.internal.render()
 
         local ok, key = pcall(vim.fn.getchar)
 
@@ -326,13 +307,10 @@ function ido.start(items, init)
             ido.state.active = false
         end
     end
-    ido.internal.hook("event_stop")
+    ido.internal.get("render").exit()
 
     vim.opt.guicursor:remove("a:idoHideCursor")
     vim.opt.guicursor:append("a:Cursor")
-
-    print(" ")
-    vim.cmd("redraw")
 
     return ido.state.current
 end
@@ -342,7 +320,7 @@ ido.setup {
 
     ignorecase = vim.o.ignorecase,
 
-    render = ido.internal.render,
+    render = require("ido.render").default,
 
     mappings = {
         ["<bs>"] = ido.delete.char.backward,

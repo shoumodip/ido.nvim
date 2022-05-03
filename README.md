@@ -81,14 +81,14 @@ function in action
 Ido is configured through a dedicated `setup` function. It accepts a table of
 options.
 
-| Option         | Type                      | Description                                           | Default                            |
-| -------------- | ------------------------- | ----------------------------------------------------- | ---------------------------------- |
-| `prompt`       | `string`                  | The prompt of the ido selector                        | `>>>`                              |
-| `ignorecase`   | `boolean`                 | Whether matching should be case insensitive           | `ignorecase` setting of Neovim     |
-| `accept_query` | `boolean`                 | If no items match, accept the query on pressing enter | false                              |
-| `render`       | `function`                | The function used for rendering Ido                   | `ido.internal.render`              |
-| `mappings`     | `table[string]{function}` | The keybindings of Ido                                | As described [above](#Keybindings) |
-| `hooks`        | `table[string]{function}` | The [hooks](#Hooks)                                   | `{}`                               |
+| Option         | Type      | Description                                           | Default                            |
+| -------------- | --------- | ----------------------------------------------------- | ---------------------------------- |
+| `prompt`       | `string`  | The prompt of the ido selector                        | `>>>`                              |
+| `ignorecase`   | `boolean` | Whether matching should be case insensitive           | `ignorecase` setting of Neovim     |
+| `accept_query` | `boolean` | If no items match, accept the query on pressing enter | `false`                            |
+| `render`       | `table`   | The [rendering system](#Rendering System)             | The echo area renderer             |
+| `mappings`     | `table`   | The keybindings of Ido                                | As described [above](#Keybindings) |
+| `hooks`        | `table`   | The [hooks](#Hooks)                                   | `{}`                               |
 
 **NOTE:** The key to be bound to in the `mappings` option ***MUST BE ALL LOWER-CASE***
 
@@ -130,8 +130,29 @@ Hooks are like `autocmd` in Vim. They get executed on certain events.
 | `delete_forward_nothing`  | If a forward delete operation was made with nothing to delete  |
 | `delete_backward_nothing` | If a backward delete operation was made with nothing to delete |
 | `filter_items`            | Just before filtering the items                                |
-| `event_start`             | Just before the event loop starts                              |
-| `event_stop`              | Just after the event loop stops                                |
+
+## Rendering System
+The rendering system of Ido takes a table which contains five necessary
+functions.
+
+For an example of the rendering interface, see [ido.render](lua/ido/render.lua).
+
+### `init()`
+The function used to initialize the rendering process.
+
+### `text(output: table, text: string, highlight: string): boolean`
+The function used to append `text` with `highlight` into `output`.
+
+A return value of `false` indicates that the output is ready, no more items
+need to be rendered. A return value of `true` indicates otherwise.
+
+### `done(output: table)`
+The function used to present `output` to the user.
+
+### `delim(output: table): boolean`
+The function used to append the item delimiter into `output`.
+
+Same return semantics as in `text()`.
 
 ## API
 ```lua
@@ -224,7 +245,7 @@ ido.internal.key("<esc>")()
 Execute the hook named `name`.
 
 ```lua
-ido.internal.hook("event_start")
+ido.internal.hook("filter_items")
 ```
 
 ### `ido.internal.query()`
