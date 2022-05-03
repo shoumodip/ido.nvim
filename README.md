@@ -29,10 +29,11 @@ $ git submodule update --init --recursive
 ## Keybindings
 | Key                 | Description               |
 | ------------------- | ------------------------- |
-| <kbd>\<bs\></kbd>   | Delete character backward |
-| <kbd>\<del\></kbd>  | Delete character forward  |
 | <kbd>\<esc\></kbd>  | Quit                      |
 | <kbd>\<cr\></kbd>   | Accept the selection      |
+| <kbd>\<tab\></kbd>  | Autocomplete common part  |
+| <kbd>\<bs\></kbd>   | Delete character backward |
+| <kbd>\<del\></kbd>  | Delete character forward  |
 | <kbd>\<c-d\></kbd>  | Delete character forward  |
 | <kbd>\<c-k\></kbd>  | Delete character backward |
 | <kbd>\<c-f\></kbd>  | Move character forward    |

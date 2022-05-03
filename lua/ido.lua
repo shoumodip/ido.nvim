@@ -82,14 +82,14 @@ end
 
 ido.motion.define("char", {
     forward = function ()
-        if ido.state.query.rhs:len() > 0 then
+        if #ido.state.query.rhs > 0 then
             ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs:sub(1, 1)
             ido.state.query.rhs = ido.state.query.rhs:sub(2)
         end
     end,
 
     backward = function ()
-        if ido.state.query.lhs:len() > 0 then
+        if #ido.state.query.lhs > 0 then
             ido.state.query.rhs = ido.state.query.lhs:sub(-1)..ido.state.query.rhs
             ido.state.query.lhs = ido.state.query.lhs:sub(1, -2)
         end
@@ -98,7 +98,7 @@ ido.motion.define("char", {
 
 ido.motion.define("word", {
     forward = function ()
-        if ido.state.query.rhs:len() > 0 then
+        if #ido.state.query.rhs > 0 then
             local index, final = ido.state.query.rhs:find("%w+")
             if index ~= nil then
                 ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs:sub(1, final)
@@ -108,7 +108,7 @@ ido.motion.define("word", {
     end,
 
     backward = function ()
-        if ido.state.query.lhs:len() > 0 then
+        if #ido.state.query.lhs > 0 then
             local index, final = ido.state.query.lhs:reverse():find("%w+")
             if index ~= nil then
                 ido.state.query.rhs = ido.state.query.lhs:sub(-final)..ido.state.query.rhs
@@ -146,13 +146,24 @@ function ido.internal.filter()
     ido.state.current = 1
     ido.state.modified = false
     ido.state.results = {}
+    ido.state.completion = nil
     local query = ido.internal.query()
 
     if #query > 0 then
         for _, item in ipairs(ido.state.items) do
-            local _, score = ido.internal.match(query, item)
+            local positions, score = ido.internal.match(query, item)
 
             if score ~= -math.huge then
+                local last_match = positions[#positions] + 1
+
+                if not ido.state.completion then
+                    ido.state.completion = item:sub(last_match)
+                else
+                    while #ido.state.completion > 0 and not vim.startswith(item:sub(last_match), ido.state.completion) do
+                        ido.state.completion = ido.state.completion:sub(1, -2)
+                    end
+                end
+
                 table.insert(ido.state.results, {item, score})
             end
         end
@@ -163,11 +174,17 @@ function ido.internal.filter()
             table.insert(ido.state.results, {item, math.huge})
         end
     end
+
+    if not ido.state.completion then
+        ido.state.completion = ""
+    end
 end
 
 function ido.internal.keystring(key, inside)
     if type(key) == "number" then
-        if key == 13 then
+        if key == 9 then
+            return inside and "tab" or "<tab>"
+        elseif key == 13 then
             return inside and "cr" or "<cr>"
         elseif key == 27 then
             return inside and "esc" or "<esc>"
@@ -186,7 +203,7 @@ function ido.internal.keystring(key, inside)
     else
         key = key:sub(4)
 
-        if key:len() == 1 then
+        if #key == 1 then
             key = key:byte()
         end
 
@@ -273,6 +290,10 @@ function ido.prev()
     end
 end
 
+function ido.complete()
+    ido.state.query.lhs = ido.state.query.lhs..ido.state.completion
+end
+
 function ido.start(items, init)
     ido.state = {
         active = true,
@@ -323,10 +344,12 @@ ido.setup {
     render = require("ido.render").default,
 
     mappings = {
-        ["<bs>"] = ido.delete.char.backward,
-        ["<del>"] = ido.delete.char.forward,
+        ["<tab>"] = ido.complete,
         ["<esc>"] = ido.stop,
         ["<cr>"] = ido.done,
+
+        ["<bs>"] = ido.delete.char.backward,
+        ["<del>"] = ido.delete.char.forward,
 
         ["<c-d>"] = ido.delete.char.forward,
         ["<c-k>"] = ido.delete.char.backward,
