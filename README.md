@@ -138,7 +138,10 @@ functions.
 For an example of the rendering interface, see [ido.render](lua/ido/render.lua).
 
 ### `init()`
-The function used to initialize the rendering process.
+The function used to initialize the renderer.
+
+### `exit()`
+The function used to exit the renderer.
 
 ### `text(output: table, text: string, highlight: string): boolean`
 The function used to append `text` with `highlight` into `output`.
