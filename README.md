@@ -86,7 +86,7 @@ options.
 | `prompt`       | `string`  | The prompt of the ido selector                        | `>>>`                              |
 | `ignorecase`   | `boolean` | Whether matching should be case insensitive           | `ignorecase` setting of Neovim     |
 | `accept_query` | `boolean` | If no items match, accept the query on pressing enter | `false`                            |
-| `render`       | `table`   | The [rendering system](#Rendering System)             | The echo area renderer             |
+| `render`       | `table`   | The [renderer](#Renderer)                             | The echo area renderer             |
 | `mappings`     | `table`   | The keybindings of Ido                                | As described [above](#Keybindings) |
 | `hooks`        | `table`   | The [hooks](#Hooks)                                   | `{}`                               |
 
@@ -131,7 +131,7 @@ Hooks are like `autocmd` in Vim. They get executed on certain events.
 | `delete_backward_nothing` | If a backward delete operation was made with nothing to delete |
 | `filter_items`            | Just before filtering the items                                |
 
-## Rendering System
+## Renderer
 The rendering system of Ido takes a table which contains five necessary
 functions.
 
