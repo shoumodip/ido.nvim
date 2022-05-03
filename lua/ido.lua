@@ -197,22 +197,21 @@ end
 
 function ido.internal.render()
     local output = {}
+    local render = ido.internal.get("render")
 
-    local draw = ido.internal.get("render").text
-
-    draw(output, ido.internal.get("prompt"), "idoPrompt")
-    draw(output, ido.state.query.lhs)
+    render.text(output, ido.internal.get("prompt"), "idoPrompt")
+    render.text(output, ido.state.query.lhs)
 
     if #ido.state.query.rhs > 0 then
-        draw(output, ido.state.query.rhs:sub(1, 1), "Cursor")
-        draw(output, ido.state.query.rhs:sub(2).." ")
+        render.text(output, ido.state.query.rhs:sub(1, 1), "Cursor")
+        render.text(output, ido.state.query.rhs:sub(2).." ")
     else
-        draw(output, " ", "Cursor")
+        render.text(output, " ", "Cursor")
     end
 
     local results = #ido.state.results
     if results > 0 then
-        if draw(output, ido.state.results[ido.state.current][1], "idoSelected") and results > 1 then
+        if render.text(output, ido.state.results[ido.state.current][1], "idoSelected") and results > 1 then
             local i = ido.state.current
 
             while true do
@@ -226,18 +225,18 @@ function ido.internal.render()
                     break
                 end
 
-                if not ido.internal.get("render").delim(output) then
+                if not render.delim(output) then
                     break
                 end
 
-                if not draw(output, ido.state.results[i][1]) then
+                if not render.text(output, ido.state.results[i][1]) then
                     break
                 end
             end
         end
     end
 
-    ido.internal.get("render").done(output)
+    render.done(output)
     output = {}
 end
 
@@ -305,6 +304,7 @@ function ido.start(items, init)
             end
         else
             ido.state.active = false
+            ido.state.current = nil
         end
     end
     ido.internal.get("render").exit()

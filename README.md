@@ -26,6 +26,13 @@ $ git submodule update --init --recursive
 :lua print(require("ido").start({"red", "green", "blue"}))
 ```
 
+## Vertical Mode
+![Vertical Mode](img/vertical.jpeg)
+
+```vim
+:lua require("ido").setup{render = require("ido.render").vertical}
+```
+
 ## Keybindings
 | Key                 | Description               |
 | ------------------- | ------------------------- |
