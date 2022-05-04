@@ -294,14 +294,14 @@ function ido.complete()
     ido.state.query.lhs = ido.state.query.lhs..ido.state.completion
 end
 
-function ido.start(items, init)
-    ido.state = {
+function ido.start(items, init, state)
+    ido.state = vim.tbl_extend("force", {
         active = true,
         items = items,
         query = {lhs = "", rhs = ""},
         modified = true,
         options = init
-    }
+    }, state or {})
 
     vim.opt.guicursor:remove("a:Cursor")
     vim.opt.guicursor:append("a:idoHideCursor")

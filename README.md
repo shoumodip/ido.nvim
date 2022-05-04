@@ -371,9 +371,11 @@ last result.
 ido.internal.prev()
 ```
 
-### `ido.start(items, init)`
+### `ido.start(items, init, state)`
 Start the Ido selector with items from `items` and optional argument `init`
 providing the temporary configuration.
+
+Pass in `state` if you need a different initial state.
 
 - Returns `nil` if `<esc>` was pressed (ie, `ido.action.quit()` was called).
 - Returns the selected item if `<cr>` was pressed (ie, `ido.action.done()` was called).
