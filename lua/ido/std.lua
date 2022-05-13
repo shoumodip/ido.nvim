@@ -181,4 +181,30 @@ function std.git_status()
     end
 end
 
+function std.git_branch()
+    if std.check_inside_git("std.git_branch") then
+        local branches = vim.fn.systemlist("git branch")
+        local current = nil
+        for i = 1, #branches do
+            if branches[i]:sub(1, 1) == "*" then
+                current = i
+            end
+
+            branches[i] = branches[i]:sub(3)
+        end
+        table.insert(branches, branches[current])
+        table.remove(branches, current)
+
+        local branch = ido.start(branches, {prompt = "Git Branch: ", accept_query = true})
+        if branch then
+            local escaped = branch:gsub("'", "'\"'\"'")
+            if os.execute("git checkout '"..escaped.."' 2>/dev/null || git checkout -b '"..escaped.."' 2>/dev/null") ~= 0 then
+                vim.api.nvim_err_writeln("git_branch: count not switch to branch '"..branch.."'")
+            else
+                print("git_branch: switched to '"..branch.."'")
+            end
+        end
+    end
+end
+
 return std

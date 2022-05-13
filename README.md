@@ -59,6 +59,7 @@ $ git submodule update --init --recursive
 | `:Ido std.git_diff`   | Find files with changes                                                               |
 | `:Ido std.git_log`    | Open log for a commit, requires [vim-fugitive](https://github.com/tpope/vim-fugitive) |
 | `:Ido std.git_status` | Find files with git changes                                                           |
+| `:Ido std.git_branch` | Switch between git branches, create if needed                                         |
 
 **NOTE:** `:Ido <file>.<function>` is the same as `:lua require('ido.<file>').<function>()`
 
