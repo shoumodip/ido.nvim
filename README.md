@@ -34,14 +34,14 @@ $ git submodule update --init --recursive
 | <kbd>\<tab\></kbd>  | Autocomplete common part  |
 | <kbd>\<bs\></kbd>   | Delete character backward |
 | <kbd>\<del\></kbd>  | Delete character forward  |
+| <kbd>\<c-k\></kbd>  | Delete line forward       |
+| <kbd>\<c-w\></kbd>  | Delete word backward      |
 | <kbd>\<c-d\></kbd>  | Delete character forward  |
-| <kbd>\<c-k\></kbd>  | Delete character backward |
 | <kbd>\<c-f\></kbd>  | Move character forward    |
 | <kbd>\<c-b\></kbd>  | Move character backward   |
 | <kbd>\<a-f\></kbd>  | Move word forward         |
 | <kbd>\<a-b\></kbd>  | Move word backward        |
 | <kbd>\<a-d\></kbd>  | Delete word forward       |
-| <kbd>\<a-k\></kbd>  | Delete word backward      |
 | <kbd>\<a-bs\></kbd> | Delete word backward      |
 | <kbd>\<c-a\></kbd>  | Move line backward        |
 | <kbd>\<c-e\></kbd>  | Move line forward         |
@@ -80,7 +80,7 @@ The current directory of the browse function is displayed in the prompt.
 function in action
 
 ## Vertical Mode
-![Vertical Mode](img/vertical.jpeg)
+![Vertical Mode](img/vertical.png)
 
 ```vim
 :lua require("ido").setup{render = require("ido.render").vertical}
@@ -141,30 +141,14 @@ Hooks are like `autocmd` in Vim. They get executed on certain events.
 | `filter_items`            | Just before filtering the items                                |
 
 ## Renderer
-The rendering system of Ido takes a table which contains five necessary
+The rendering system of Ido takes a table which contains three necessary
 functions.
 
-For an example of the rendering interface, see [ido.render](lua/ido/render.lua).
+- `init()` The function used to initialize the renderer
+- `exit()` The function used to exit the renderer
+- `draw(prompt: string, state: table)` The function used to draw the selector
 
-### `init()`
-The function used to initialize the renderer.
-
-### `exit()`
-The function used to exit the renderer.
-
-### `text(output: table, text: string, highlight: string): boolean`
-The function used to append `text` with `highlight` into `output`.
-
-A return value of `false` indicates that the output is ready, no more items
-need to be rendered. A return value of `true` indicates otherwise.
-
-### `done(output: table)`
-The function used to present `output` to the user.
-
-### `delim(output: table): boolean`
-The function used to append the item delimiter into `output`.
-
-Same return semantics as in `text()`.
+See [ido.render](lua/ido/render.lua) for examples.
 
 ## API
 ```lua
@@ -213,14 +197,26 @@ ido.state.modified = true
 The items which match the query.
 
 ```lua
-ido.state.results = vim.split(vim.fn.glob("**"), "\n")
+ido.state.results = {
+    {
+        "foo",     -- The result string
+        math.huge, -- The fuzzy score
+        {1, 2, 3}  -- The positions where it matched
+    },
+
+    {
+        "foobar",  -- The result string
+        4.5,       -- The fuzzy score
+        {1, 2, 3}  -- The positions where it matched
+    },
+}
 ```
 
 ### `ido.state.current`
 The current selected item in the results.
 
 ```lua
-print(ido.state.results[ido.state.current])
+print(ido.state.results[ido.state.current][1])
 ```
 
 ### `ido.state.options`

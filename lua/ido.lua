@@ -164,14 +164,14 @@ function ido.internal.filter()
                     end
                 end
 
-                table.insert(ido.state.results, {item, score})
+                table.insert(ido.state.results, {item, score, positions})
             end
         end
 
         table.sort(ido.state.results, function (lhs, rhs) return lhs[2] > rhs[2] end)
     else
         for _, item in ipairs(ido.state.items) do
-            table.insert(ido.state.results, {item, math.huge})
+            table.insert(ido.state.results, {item, math.huge, {}})
         end
     end
 
@@ -210,51 +210,6 @@ function ido.internal.keystring(key, inside)
         assert(not inside)
         return "<a-"..ido.internal.keystring(key, true)..">"
     end
-end
-
-function ido.internal.render()
-    local output = {}
-    local render = ido.internal.get("render")
-
-    render.text(output, ido.internal.get("prompt"), "idoPrompt")
-    render.text(output, ido.state.query.lhs)
-
-    if #ido.state.query.rhs > 0 then
-        render.text(output, ido.state.query.rhs:sub(1, 1), "Cursor")
-        render.text(output, ido.state.query.rhs:sub(2).." ")
-    else
-        render.text(output, " ", "Cursor")
-    end
-
-    local results = #ido.state.results
-    if results > 0 then
-        if render.text(output, ido.state.results[ido.state.current][1], "idoSelected") and results > 1 then
-            local i = ido.state.current
-
-            while true do
-                i = i + 1
-
-                if i > results then
-                    i = 1
-                end
-
-                if i == ido.state.current then
-                    break
-                end
-
-                if not render.delim(output) then
-                    break
-                end
-
-                if not render.text(output, ido.state.results[i][1]) then
-                    break
-                end
-            end
-        end
-    end
-
-    render.done(output)
-    output = {}
 end
 
 function ido.stop()
@@ -306,13 +261,17 @@ function ido.start(items, init, state)
     vim.opt.guicursor:remove("a:Cursor")
     vim.opt.guicursor:append("a:idoHideCursor")
 
-    ido.internal.get("render").init()
+    local init = ido.internal.get("render").init
+    if init then
+        init()
+    end
+
     while ido.state.active do
         if ido.state.modified then
             ido.internal.filter()
         end
 
-        ido.internal.render()
+        ido.internal.get("render").draw(ido.internal.get("prompt"), ido.state)
 
         local ok, key = pcall(vim.fn.getchar)
 
@@ -328,7 +287,11 @@ function ido.start(items, init, state)
             ido.state.current = nil
         end
     end
-    ido.internal.get("render").exit()
+
+    local exit = ido.internal.get("render").exit
+    if exit then
+        exit()
+    end
 
     vim.opt.guicursor:remove("a:idoHideCursor")
     vim.opt.guicursor:append("a:Cursor")
@@ -351,8 +314,9 @@ ido.setup {
         ["<bs>"] = ido.delete.char.backward,
         ["<del>"] = ido.delete.char.forward,
 
+        ["<c-k>"] = ido.delete.line.forward,
+        ["<c-w>"] = ido.delete.word.backward,
         ["<c-d>"] = ido.delete.char.forward,
-        ["<c-k>"] = ido.delete.char.backward,
 
         ["<c-f>"] = ido.motion.char.forward,
         ["<c-b>"] = ido.motion.char.backward,
@@ -361,14 +325,13 @@ ido.setup {
         ["<a-b>"] = ido.motion.word.backward,
 
         ["<a-d>"] = ido.delete.word.forward,
-        ["<a-k>"] = ido.delete.word.backward,
         ["<a-bs>"] = ido.delete.word.backward,
 
         ["<c-a>"] = ido.motion.line.backward,
         ["<c-e>"] = ido.motion.line.forward,
 
         ["<c-n>"] = ido.next,
-        ["<c-p>"] = ido.prev
+        ["<c-p>"] = ido.prev,
     },
 
     hooks = {}
