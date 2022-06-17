@@ -31,6 +31,7 @@ $ git submodule update --init --recursive
 | ------------------- | ------------------------- |
 | <kbd>\<esc\></kbd>  | Quit                      |
 | <kbd>\<cr\></kbd>   | Accept the selection      |
+| <kbd>\<c-j\></kbd>  | Accept the query          |
 | <kbd>\<tab\></kbd>  | Autocomplete common part  |
 | <kbd>\<bs\></kbd>   | Delete character backward |
 | <kbd>\<del\></kbd>  | Delete character forward  |

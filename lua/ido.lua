@@ -229,6 +229,11 @@ function ido.done()
     end
 end
 
+function ido.done_query()
+    ido.state.active = false
+    ido.state.current = ido.internal.query()
+end
+
 function ido.next()
     if ido.state.current < #ido.state.results then
         ido.state.current = ido.state.current + 1
@@ -310,6 +315,7 @@ ido.setup {
         ["<tab>"] = ido.complete,
         ["<esc>"] = ido.stop,
         ["<cr>"] = ido.done,
+        ["<c-j>"] = ido.done_query,
 
         ["<bs>"] = ido.delete.char.backward,
         ["<del>"] = ido.delete.char.forward,
