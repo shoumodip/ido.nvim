@@ -164,14 +164,16 @@ function std.git_diff()
 end
 
 function std.git_grep()
-    local query = vim.fn.input("Search: "):gsub("'", "'\"'\"'")
-    if #query ~= 0 then
-        local file = ido.start(vim.fn.systemlist("git grep -inH --untracked '"..query.."'"), {
-            prompt = "Git Grep: ", accept_query = true
-        })
-        if file then
-            local location = vim.split(file, ':')
-            vim.cmd("edit "..location[1].." | normal! "..location[2].."G")
+    if std.check_inside_git("std.git_grep") then
+        local query = vim.fn.input("Search: "):gsub("'", "'\"'\"'")
+        if #query ~= 0 then
+            local file = ido.start(vim.fn.systemlist("git grep -inH --untracked '"..query.."'"), {
+                prompt = "Git Grep: ", accept_query = true
+            })
+            if file then
+                local location = vim.split(file, ':')
+                vim.cmd("edit "..location[1].." | normal! "..location[2].."G")
+            end
         end
     end
 end
