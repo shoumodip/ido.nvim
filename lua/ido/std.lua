@@ -121,6 +121,13 @@ function std.find_files()
     end
 end
 
+function std.recent_files()
+    local file = ido.start(vim.v.oldfiles, {prompt = "Recent Files: ", accept_query = true})
+    if file then
+        vim.cmd("edit "..file)
+    end
+end
+
 function std.is_inside_git()
     return os.execute("git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null") == 0
 end
@@ -152,6 +159,19 @@ function std.git_diff()
         local file = ido.start(vim.fn.systemlist("git diff --name-only"), {prompt = "Git Diff: "})
         if file then
             vim.cmd("edit "..file)
+        end
+    end
+end
+
+function std.git_grep()
+    local query = vim.fn.input("Search: "):gsub("'", "'\"'\"'")
+    if #query ~= 0 then
+        local file = ido.start(vim.fn.systemlist("git grep -inH --untracked '"..query.."'"), {
+            prompt = "Git Grep: ", accept_query = true
+        })
+        if file then
+            local location = vim.split(file, ':')
+            vim.cmd("edit "..location[1].." | normal! "..location[2].."G")
         end
     end
 end
