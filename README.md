@@ -142,6 +142,8 @@ Hooks are like `autocmd` in Vim. They get executed on certain events.
 | `delete_forward_nothing`  | If a forward delete operation was made with nothing to delete  |
 | `delete_backward_nothing` | If a backward delete operation was made with nothing to delete |
 | `filter_items`            | Just before filtering the items                                |
+| `event_start`             | The start of the selection interface                           |
+| `event_stop`              | The end of the selection interface                             |
 
 ## Renderer
 The rendering system of Ido takes a table which contains three necessary

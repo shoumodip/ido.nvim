@@ -165,10 +165,18 @@ end
 
 function std.git_grep()
     if std.check_inside_git("std.git_grep") then
-        local query = vim.fn.input("Search: "):gsub("'", "'\"'\"'")
+        local query = vim.fn.input("Search: ")
+
         if #query ~= 0 then
-            local file = ido.start(vim.fn.systemlist("git grep -inH --untracked '"..query.."'"), {
-                prompt = "Git Grep: ", accept_query = true
+            local file = ido.start(vim.fn.systemlist("git grep -inI --untracked '"..query:gsub("'", "'\"'\"'").."'"), {
+                prompt = "Git Grep: ",
+                accept_query = true,
+                hooks = {
+                    ["event_start"] = function ()
+                        vim.cmd("syntax match Search '"..query:gsub("'", "''").."'")
+                        vim.cmd("syntax match Underlined '^\\f\\+:\\s*\\d\\+\\(:\\d\\+\\)\\?'")
+                    end
+                }
             })
             if file then
                 local location = vim.split(file, ':')

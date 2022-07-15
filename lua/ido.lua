@@ -271,6 +271,7 @@ function ido.start(items, init, state)
         init()
     end
 
+    ido.internal.hook("event_start")
     while ido.state.active do
         if ido.state.modified then
             ido.internal.filter()
@@ -292,6 +293,7 @@ function ido.start(items, init, state)
             ido.state.current = nil
         end
     end
+    ido.internal.hook("event_stop")
 
     local exit = ido.internal.get("render").exit
     if exit then
