@@ -165,7 +165,7 @@ end
 
 function std.git_grep()
     if std.check_inside_git("std.git_grep") then
-        local query = vim.fn.input("Search: ")
+        local query = vim.fn.input("Search: ", vim.fn.expand("<cword>"))
 
         if #query ~= 0 then
             local file = ido.start(vim.fn.systemlist("git grep -inI --untracked '"..query:gsub("'", "'\"'\"'").."'"), {
@@ -234,6 +234,87 @@ function std.git_branch()
                 print("git_branch: switched to '"..branch.."'")
             end
         end
+    end
+end
+
+function std.manpages()
+    local manpage = ido.start(vim.fn["man#complete"]("", "Man", 0), {
+        prompt = "Manpages: "
+    }, {
+        query = {
+            lhs = vim.fn.expand("<cword>"), rhs = ""
+        }
+    })
+    if manpage then
+        vim.cmd("Man "..manpage)
+    end
+end
+
+-- Stolen from https://github.com/nvim-telescope/telescope.nvim
+function std.helptags()
+    local langs={"en"}
+    local langs_map = {en = true}
+    local tag_files = {}
+    local function add_tag_file(lang, file)
+        if langs_map[lang] then
+            if tag_files[lang] then
+                table.insert(tag_files[lang], file)
+            else
+                tag_files[lang] = { file }
+            end
+        end
+    end
+
+    local function path_tail(path)
+        for i = #path, 1, -1 do
+            if path:sub(i, i) == '/' then
+                return path:sub(i + 1, -1)
+            end
+        end
+        return path
+    end
+
+    local help_files = {}
+    local all_files = vim.api.nvim_get_runtime_file("doc/*", true)
+    for _, fullpath in ipairs(all_files) do
+        local file = path_tail(fullpath)
+        if file == "tags" then
+            add_tag_file("en", fullpath)
+        elseif file:match "^tags%-..$" then
+            local lang = file:sub(-2)
+            add_tag_file(lang, fullpath)
+        else
+            help_files[file] = fullpath
+        end
+    end
+
+    local tags = {}
+    local tags_map = {}
+    local delimiter = string.char(9)
+    for _, lang in ipairs(langs) do
+        for _, file in ipairs(tag_files[lang] or {}) do
+            local lines = vim.fn.readfile(file)
+            for _, line in ipairs(lines) do
+                if not line:match "^!_TAG_" then
+                    local fields = vim.split(line, delimiter, true)
+                    if #fields == 3 and not tags_map[fields[1]] then
+                        if fields[1] ~= "help-tags" or fields[2] ~= "tags" then
+                            table.insert(tags, fields[1])
+                            tags_map[fields[1]] = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local topic = ido.start(tags, {prompt = "Helptags: "}, {
+        query = {
+            lhs = vim.fn.expand("<cWORD>"), rhs = ""
+        }
+    })
+    if topic then
+        vim.cmd("help "..topic)
     end
 end
 
