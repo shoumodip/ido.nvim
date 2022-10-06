@@ -238,7 +238,7 @@ function std.git_branch()
 end
 
 function std.manpages()
-    local manpage = ido.start(vim.fn["man#complete"]("", "Man", 0), {
+    local manpage = ido.start(require('man').man_complete("*", "Man *"), {
         prompt = "Manpages: "
     }, {
         query = {
