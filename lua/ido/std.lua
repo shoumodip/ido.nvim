@@ -23,6 +23,7 @@ function std.browse()
         ido.state.query = {lhs = "", rhs = ""}
     end
 
+    local cmd = "edit"
     local file = ido.start(list(), {
         prompt = "Browse: "..cwd:gsub(vim.env.HOME, "~"),
 
@@ -36,6 +37,24 @@ function std.browse()
                     if vim.fn.isdirectory(final) == 1 then
                         cwd = final
                         update()
+                    end
+                end
+            end,
+
+            ["<c-v>"] = function ()
+                if #ido.state.results > 0 then
+                    if vim.fn.isdirectory(cwd..ido.state.results[ido.state.current][1]) == 0 then
+                        cmd = "vsplit"
+                        ido.done()
+                    end
+                end
+            end,
+
+            ["<c-s>"] = function ()
+                if #ido.state.results > 0 then
+                    if vim.fn.isdirectory(cwd..ido.state.results[ido.state.current][1]) == 0 then
+                        cmd = "split"
+                        ido.done()
                     end
                 end
             end,
@@ -72,7 +91,7 @@ function std.browse()
             file = file:sub(#cwd + 2)
         end
 
-        vim.cmd("edit "..file)
+        vim.cmd(cmd.." "..file)
     end
 end
 
@@ -101,9 +120,28 @@ function std.buffer()
     local list = vim.fn.getcompletion("", "buffer")
     std.buffer_sort(list)
 
-    local buffer = ido.start(list, {prompt = "Buffer: "})
+    local cmd = "buffer"
+    local buffer = ido.start(list, {
+        prompt = "Buffer: ",
+        mappings = {
+            ["<c-v>"] = function ()
+                if #ido.state.results > 0 then
+                    cmd = "vsplit"
+                    ido.done()
+                end
+            end,
+
+            ["<c-s>"] = function ()
+                if #ido.state.results > 0 then
+                    cmd = "split"
+                    ido.done()
+                end
+            end
+        }
+    })
+
     if buffer then
-        vim.cmd("buffer "..buffer)
+        vim.cmd(cmd.." "..buffer)
     end
 end
 
@@ -114,18 +152,40 @@ function std.filetypes()
     end
 end
 
-function std.find_files()
-    local file = ido.start(vim.split(vim.fn.glob("**"), "\n"), {prompt = "Files: ", accept_query = true})
+function std.find_files_template(prompt, files)
+    local cmd = "edit"
+
+    local file = ido.start(files, {
+        prompt = prompt,
+        accept_query = true,
+        mappings = {
+            ["<c-v>"] = function ()
+                if #ido.state.results > 0 then
+                    cmd = "vsplit"
+                    ido.done()
+                end
+            end,
+
+            ["<c-s>"] = function ()
+                if #ido.state.results > 0 then
+                    cmd = "split"
+                    ido.done()
+                end
+            end
+        }
+    })
+
     if file then
-        vim.cmd("edit "..file)
+        vim.cmd(cmd.." "..file)
     end
 end
 
+function std.find_files()
+    std.find_files_template("Files: ", vim.split(vim.fn.glob("**"), "\n"))
+end
+
 function std.recent_files()
-    local file = ido.start(vim.v.oldfiles, {prompt = "Recent Files: ", accept_query = true})
-    if file then
-        vim.cmd("edit "..file)
-    end
+    std.find_files_template("Recent Files: ", vim.v.oldfiles)
 end
 
 function std.is_inside_git()
@@ -143,23 +203,13 @@ end
 
 function std.git_files()
     if std.check_inside_git("std.git_files") then
-        local file = ido.start(vim.fn.systemlist("git ls-files --cached --others --exclude-standard"), {
-            prompt = "Git Files: ",
-            accept_query = true
-        })
-
-        if file then
-            vim.cmd("edit "..file)
-        end
+        std.find_files_template("Git Files: ", vim.fn.systemlist("git ls-files --cached --others --exclude-standard"))
     end
 end
 
 function std.git_diff()
     if std.check_inside_git("std.git_diff") then
-        local file = ido.start(vim.fn.systemlist("git diff --name-only"), {prompt = "Git Diff: "})
-        if file then
-            vim.cmd("edit "..file)
-        end
+        std.find_files_template("Git Diff: ", vim.fn.systemlist("git diff --name-only"))
     end
 end
 
@@ -191,10 +241,28 @@ function std.git_log()
         if vim.fn.exists("*FugitiveFind") == 0 then
             vim.api.nvim_err_writeln("std.git_log: tpope/vim-fugitive not installed")
         else
-            local commit = ido.start(vim.fn.systemlist("git log --format='%h%d %s %cr'"), {prompt = "Git Log: "})
+            local cmd = "edit"
+            local commit = ido.start(vim.fn.systemlist("git log --format='%h%d %s %cr'"), {
+                prompt = "Git Log: ",
+                mappings = {
+                    ["<c-v>"] = function ()
+                        if #ido.state.results > 0 then
+                            cmd = "vsplit"
+                            ido.done()
+                        end
+                    end,
+
+                    ["<c-s>"] = function ()
+                        if #ido.state.results > 0 then
+                            cmd = "split"
+                            ido.done()
+                        end
+                    end
+                }
+            })
             if commit then
                 commit = commit:gsub(" .*", "")
-                vim.cmd("edit "..vim.fn.FugitiveFind(commit))
+                vim.cmd(cmd.." "..vim.fn.FugitiveFind(commit))
             end
         end
     end
@@ -202,11 +270,29 @@ end
 
 function std.git_status()
     if std.check_inside_git("std.git_status") then
-        local file = ido.start(vim.fn.systemlist("git status --short --untracked-files=all"), {prompt = "Git Status: "})
+        local cmd = "edit"
+        local file = ido.start(vim.fn.systemlist("git status --short --untracked-files=all"), {
+            prompt = "Git Status: ",
+            mappings = {
+                ["<c-v>"] = function ()
+                    if #ido.state.results > 0 then
+                        cmd = "vsplit"
+                        ido.done()
+                    end
+                end,
+
+                ["<c-s>"] = function ()
+                    if #ido.state.results > 0 then
+                        cmd = "split"
+                        ido.done()
+                    end
+                end
+            }
+        })
 
         if file then
             file = file:gsub(" ?[^ ]+ ", "", 1)
-            vim.cmd("edit "..file)
+            vim.cmd(cmd.." "..file)
         end
     end
 end

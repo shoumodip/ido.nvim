@@ -91,6 +91,15 @@ function in action
 :lua require("ido").setup{render = require("ido.render").vertical}
 ```
 
+## Open Modes
+The file/buffer selectors allow different opening modes.
+
+| Mode                                | Activation |
+| ----------------------------------- | ---------- |
+| Open the file in the current window | Default    |
+| Open the file in a horizontal split | `<c-s>`    |
+| Open the file in a vertical split   | `<c-v>`    |
+
 ## Configuration
 Ido is configured through a dedicated `setup` function. It accepts a table of
 options.
