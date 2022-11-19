@@ -141,11 +141,6 @@ function ido.internal.match(query, item)
 end
 
 function ido.internal.filter()
-    ido.internal.hook("filter_items")
-
-    ido.state.current = 1
-    ido.state.modified = false
-    ido.state.results = {}
     ido.state.completion = nil
     local query = ido.internal.query()
 
@@ -274,7 +269,11 @@ function ido.start(items, init, state)
     ido.internal.hook("event_start")
     while ido.state.active do
         if ido.state.modified then
-            ido.internal.filter()
+            ido.state.current = 1
+            ido.state.results = {}
+            ido.state.modified = false
+            ido.internal.hook("filter_items")
+            ido.internal.get("filter")()
         end
 
         ido.internal.get("render").draw(ido.internal.get("prompt"), ido.state)
@@ -310,6 +309,8 @@ ido.setup {
     prompt = ">>> ",
 
     ignorecase = vim.o.ignorecase,
+
+    filter = ido.internal.filter,
 
     render = require("ido.render").default,
 
