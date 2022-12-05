@@ -335,7 +335,11 @@ function std.manpages()
         }
     })
     if manpage then
-        vim.cmd("Man "..manpage)
+        if vim.fn.exists(":SigmaMan") == 2 then
+            vim.cmd("SigmaMan "..manpage:gsub("(.*)%((.*)%)", "%2 %1"))
+        else
+            vim.cmd("Man "..manpage)
+        end
     end
 end
 
