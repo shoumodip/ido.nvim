@@ -3,7 +3,7 @@ local ido = require("ido")
 local std = {}
 
 function std.browse()
-    local cwd = vim.fn.expand("%:p:h")
+    local cwd = vim.bo.buftype == "terminal" and vim.fn.getcwd() or vim.fn.expand("%:p:h")
     if cwd ~= "/" then
         cwd = cwd.."/"
     end
