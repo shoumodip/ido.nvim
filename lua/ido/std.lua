@@ -41,6 +41,22 @@ function std.browse()
                 end
             end,
 
+            ["<tab>"] = function ()
+                if #ido.state.results > 0 then
+                    ido.complete()
+
+                    local query = ido.internal.query()
+                    if query:sub(-1) == "/" then
+                        local final = cwd..query
+
+                        if vim.fn.isdirectory(final) == 1 then
+                            cwd = final
+                            update()
+                        end
+                    end
+                end
+            end,
+
             ["<c-v>"] = function ()
                 if #ido.state.results > 0 then
                     if vim.fn.isdirectory(cwd..ido.state.results[ido.state.current][1]) == 0 then
