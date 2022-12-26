@@ -332,10 +332,6 @@ local positions, score = ido.internal.match("foo", "foobar")
 ### `ido.internal.filter()`
 Filter the results from the items.
 
-```lua
-ido.internal.filter()
-```
-
 ### `ido.internal.keystring(key, inside)`
 Convert `key` in format of `getchar()`, into string representing vim mapping
 syntax.
@@ -347,42 +343,19 @@ recursively.
 print(ido.internal.keystring(112))
 ```
 
-### `ido.internal.render()`
-The default renderer of Ido.
-
-```lua
-ido.internal.render()
-```
-
 ### `ido.stop()`
 Stop the Ido event loop. Same as pressing `<esc>`.
 
-```lua
-ido.internal.stop()
-```
-
 ### `ido.done()`
 Stop the Ido event loop and accept the selected item. Same as pressing `<cr>`.
-
-```lua
-ido.internal.done()
-```
 
 ### `ido.next()`
 Select the next result. If there is no next item, wrap around to the first
 result.
 
-```lua
-ido.internal.next()
-```
-
 ### `ido.prev()`
 Select the previous result. If there is no previous item, wrap around to the
 last result.
-
-```lua
-ido.internal.prev()
-```
 
 ### `ido.start(items, init, state)`
 Start the Ido selector with items from `items` and optional argument `init`
