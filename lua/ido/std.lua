@@ -218,8 +218,10 @@ function std.check_inside_git(name)
 end
 
 function std.git_files()
-    if std.check_inside_git("std.git_files") then
+    if std.is_inside_git("std.git_files") then
         std.find_files_template("Git Files: ", vim.fn.systemlist("git ls-files --cached --others --exclude-standard"))
+    else
+        std.browse()
     end
 end
 
