@@ -21,7 +21,7 @@ function render.default.init()
     })
 
     vim.api.nvim_win_set_option(window, "winhighlight", "Normal:Normal,FloatBorder:Comment")
-    vim.cmd.mode()
+    vim.cmd("mode")
 end
 
 function render.default.draw(prompt, state)
@@ -46,7 +46,7 @@ function render.default.draw(prompt, state)
     vim.api.nvim_win_set_option(0, "cursorline", #state.results > 0)
 
     vim.fn.clearmatches()
-    vim.fn.matchaddpos("idoPrompt", {{1, 1, prompt:len()}})
+    vim.fn.matchaddpos("Question", {{1, 1, prompt:len()}})
     vim.fn.matchaddpos("Cursor", {{1, prompt:len() + state.query.lhs:len() + 1, 1}})
 
     local row = 2
@@ -60,15 +60,15 @@ function render.default.draw(prompt, state)
         row = row + 1
     end
 
-    vim.cmd.redraw()
+    vim.cmd("redraw")
 end
 
 function render.default.exit()
-    vim.cmd.close()
+    vim.cmd("close")
 end
 
 function render.vertical.init()
-    vim.cmd.new()
+    vim.cmd("new")
     vim.api.nvim_buf_set_option(0, "buftype", "nofile")
     vim.api.nvim_buf_set_option(0, "bufhidden", "delete")
     vim.api.nvim_win_set_option(0, "statusline", "Ido")

@@ -259,7 +259,7 @@ function ido.start(items, init, state)
     }, state or {})
 
     vim.opt.guicursor:remove("a:Cursor")
-    vim.opt.guicursor:append("a:idoHideCursor")
+    vim.opt.guicursor:append("a:IdoHideCursor")
 
     local init = ido.internal.get("render").init
     if init then
@@ -299,7 +299,7 @@ function ido.start(items, init, state)
         exit()
     end
 
-    vim.opt.guicursor:remove("a:idoHideCursor")
+    vim.opt.guicursor:remove("a:IdoHideCursor")
     vim.opt.guicursor:append("a:Cursor")
 
     return ido.state.current
