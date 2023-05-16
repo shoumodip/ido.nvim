@@ -3,82 +3,29 @@ local render = {
     vertical = {}
 }
 
-function render.default.draw(prompt, state)
-    local output = {}
-    local space = vim.opt.columns:get()
-
-    local function draw(text, highlight)
-        if space == 0 then
-            return false
-        end
-
-        if text:len() + 1 > space then
-            text = text:sub(1, space - 1)
-        end
-        space = space - text:len()
-        table.insert(output, {text, highlight or "Normal"})
-
-        return true
-    end
-
-    draw(prompt, "idoPrompt")
-    draw(state.query.lhs)
-
-    if #state.query.rhs > 0 then
-        draw(state.query.rhs:sub(1, 1), "Cursor")
-        draw(state.query.rhs:sub(2).." ")
-    else
-        draw(" ", "Cursor")
-    end
-
-    local results = #state.results
-    if results > 0 then
-        if draw(state.results[state.current][1], "idoSelected") and results > 1 then
-            local i = state.current
-
-            while true do
-                i = i + 1
-
-                if i > results then
-                    i = 1
-                end
-
-                if i == state.current then
-                    break
-                end
-
-                if not draw(" | ", "idoSeparator") then
-                    break
-                end
-
-                if not draw(state.results[i][1]) then
-                    break
-                end
-            end
-        end
-    end
-
-    draw(string.rep(" ", space - 1))
-
-    print(" ")
-    vim.cmd("redraw")
-
-    vim.api.nvim_echo(output, false, {})
-end
-
-function render.default.exit()
-    vim.cmd("mode")
-end
-
-function render.vertical.init()
-    vim.cmd("new")
-    vim.api.nvim_buf_set_option(0, "buftype", "nofile")
+function render.default.init()
+    local buffer = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_option(0, "bufhidden", "delete")
-    vim.api.nvim_win_set_option(0, "statusline", "Ido")
+
+    local width = vim.api.nvim_get_option("columns")
+    local height = vim.api.nvim_get_option("lines")
+
+    local window = vim.api.nvim_open_win(buffer, true, {
+        style = "minimal",
+        border = "single",
+        relative = "editor",
+        width = math.ceil(width * 0.7),
+        height = math.ceil(height * 0.8),
+        row = math.ceil(height * 0.1 - 2),
+        col = math.ceil(width * 0.15)
+    })
+
+    vim.api.nvim_win_set_option(window, "winhighlight", "Normal:Normal,FloatBorder:Comment")
+    vim.cmd.mode()
 end
 
-function render.vertical.draw(prompt, state)
-    local height = vim.fn.winheight(0) - 1
+function render.default.draw(prompt, state)
+    local height = vim.api.nvim_win_get_height(0) - 1
     local output = {}
 
     if state.query.rhs == "" then
@@ -113,11 +60,21 @@ function render.vertical.draw(prompt, state)
         row = row + 1
     end
 
-    vim.cmd("redraw")
+    vim.cmd.redraw()
 end
 
-function render.vertical.exit()
-    vim.cmd("close")
+function render.default.exit()
+    vim.cmd.close()
 end
+
+function render.vertical.init()
+    vim.cmd.new()
+    vim.api.nvim_buf_set_option(0, "buftype", "nofile")
+    vim.api.nvim_buf_set_option(0, "bufhidden", "delete")
+    vim.api.nvim_win_set_option(0, "statusline", "Ido")
+end
+
+render.vertical.draw = render.default.draw
+render.vertical.exit = render.default.exit
 
 return render
