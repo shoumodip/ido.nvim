@@ -305,6 +305,20 @@ function ido.start(items, init, state)
     return ido.state.current
 end
 
+function ido.escape(combo)
+    local init = combo:len() - 1
+    assert(init > 0, "escape combination must be atleast 2 characters long")
+
+    local last = combo:sub(-1)
+    ido.options.mappings[last] = function ()
+        if ido.state.query.lhs:len() >= init and ido.state.query.lhs:sub(-init) == combo:sub(1, -2) then
+            ido.stop()
+        else
+            ido.internal.insert(last)
+        end
+    end
+end
+
 ido.setup {
     prompt = ">>> ",
 

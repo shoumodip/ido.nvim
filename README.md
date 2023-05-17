@@ -91,6 +91,14 @@ function in action
 :lua require("ido").setup{render = require("ido.render").vertical}
 ```
 
+## Escape combination
+Use key combinations to exit the selector.
+
+```vim
+:lua require("ido").escape("jk")
+:lua require("ido").escape("qqq")
+```
+
 ## Open Modes
 The file/buffer selectors allow different opening modes.
 
@@ -372,3 +380,6 @@ if file then
     vim.cmd("edit "..file)
 end
 ```
+
+### `ido.escape(combo)`
+Create custom escape combinations.
