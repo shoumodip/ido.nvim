@@ -197,7 +197,18 @@ function std.find_files_template(prompt, files)
 end
 
 function std.find_files()
-    std.find_files_template("Files: ", vim.split(vim.fn.glob("**"), "\n"))
+    std.find_files_template("Files: ", vim.fn.systemlist("find -type f"))
+end
+
+function std.change_dir()
+    local file = ido.start(vim.fn.systemlist("find -type d"), {
+        prompt = "Change Dir: ",
+        accept_query = true
+    })
+
+    if file then
+        vim.cmd("cd "..file)
+    end
 end
 
 function std.recent_files()
