@@ -5,7 +5,7 @@ local render = {
 
 function render.default.init()
     local buffer = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_option(0, "bufhidden", "delete")
+    vim.api.nvim_buf_set_option(buffer, "bufhidden", "delete")
 
     local width = vim.api.nvim_get_option("columns")
     local height = vim.api.nvim_get_option("lines")
@@ -20,7 +20,7 @@ function render.default.init()
         col = math.ceil(width * 0.15)
     })
 
-    vim.api.nvim_win_set_option(window, "winhighlight", "Normal:Normal,FloatBorder:Comment")
+    vim.api.nvim_win_set_option(window, "winhighlight", "Normal:Normal,FloatBorder:WinSeparator")
     vim.cmd("mode")
 end
 
