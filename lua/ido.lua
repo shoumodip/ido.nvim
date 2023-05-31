@@ -1,363 +1,408 @@
 local ido = {
-    motion = {},
-    delete = {},
-    options = {},
-    internal = {},
-    state = {},
+  utils = {},
+  buffer = {},
+  window = {},
+  mappings = {}
 }
 
-function ido.setup(config)
-    ido.options = vim.tbl_deep_extend("force", ido.options, config or {})
-end
+local fzy = require("fzy.lua")
 
-function ido.internal.get(option)
-    if ido.state.options and ido.state.options[option] then
-        return ido.state.options[option]
-    else
-        return ido.options[option]
-    end
-end
+function ido.open(name)
+  local buffer = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
 
-function ido.internal.set(option, value)
-    if ido.state.options and ido.state.options[option] then
-        ido.state.options[option] = value
-    else
-        ido.options[option] = value
-    end
-end
+  local window = vim.api.nvim_open_win(buffer, true, ido.window.opts)
+  vim.api.nvim_win_set_option(window, "wrap", false)
+  vim.api.nvim_win_set_option(window,
+    "winhighlight", "Normal:Normal,FloatBorder:WinSeparator")
 
-function ido.internal.key(key)
-    if ido.state.options and ido.state.options.mappings and ido.state.options.mappings[key] then
-        return ido.state.options.mappings[key]
-    else
-        return ido.options.mappings[key]
-    end
-end
-
-function ido.internal.hook(name)
-    if ido.state.options and ido.state.options.hooks and ido.state.options.hooks[name] then
-        ido.state.options.hooks[name]()
-    elseif ido.options.hooks[name] then
-        ido.options.hooks[name]()
-    end
-end
-
-function ido.internal.query()
-    return ido.state.query.lhs..ido.state.query.rhs
-end
-
-function ido.internal.insert(char)
-    ido.state.query.lhs = ido.state.query.lhs..char
-    ido.state.modified = true
-end
-
-function ido.motion.define(name, action)
-    ido.motion[name] = action
-    ido.delete[name] = {
-        forward = function ()
-            if #ido.state.query.rhs > 0 then
-                ido.state.modified = true
-
-                local lhs = ido.state.query.lhs
-                action.forward()
-                ido.state.query.lhs = lhs
-            else
-                ido.internal.hook("delete_forward_nothing")
-            end
-        end,
-
-        backward = function ()
-            if #ido.state.query.lhs > 0 then
-                ido.state.modified = true
-
-                local rhs = ido.state.query.rhs
-                action.backward()
-                ido.state.query.rhs = rhs
-            else
-                ido.internal.hook("delete_backward_nothing")
-            end
-        end
-    }
-end
-
-ido.motion.define("char", {
-    forward = function ()
-        if #ido.state.query.rhs > 0 then
-            ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs:sub(1, 1)
-            ido.state.query.rhs = ido.state.query.rhs:sub(2)
-        end
-    end,
-
-    backward = function ()
-        if #ido.state.query.lhs > 0 then
-            ido.state.query.rhs = ido.state.query.lhs:sub(-1)..ido.state.query.rhs
-            ido.state.query.lhs = ido.state.query.lhs:sub(1, -2)
-        end
-    end
-})
-
-ido.motion.define("word", {
-    forward = function ()
-        if #ido.state.query.rhs > 0 then
-            local index, final = ido.state.query.rhs:find("%w+")
-            if index ~= nil then
-                ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs:sub(1, final)
-                ido.state.query.rhs = ido.state.query.rhs:sub(final + 1)
-            end
-        end
-    end,
-
-    backward = function ()
-        if #ido.state.query.lhs > 0 then
-            local index, final = ido.state.query.lhs:reverse():find("%w+")
-            if index ~= nil then
-                ido.state.query.rhs = ido.state.query.lhs:sub(-final)..ido.state.query.rhs
-                ido.state.query.lhs = ido.state.query.lhs:sub(1, -final - 1)
-            end
-        end
-    end
-})
-
-ido.motion.define("line", {
-    forward = function ()
-        ido.state.query.lhs = ido.state.query.lhs..ido.state.query.rhs
-        ido.state.query.rhs = ""
-    end,
-
-    backward = function ()
-        ido.state.query.rhs = ido.state.query.lhs..ido.state.query.rhs
-        ido.state.query.lhs = ""
-    end
-})
-
-local fzy = dofile(debug.getinfo(1).source:sub(2, -12).."deps/fzy-lua-native/lua/native.lua")
-
-function ido.internal.match(query, item)
-    if fzy.has_match(query, item, not ido.internal.get("ignorecase")) then
-        return fzy.positions(query, item, not ido.internal.get("ignorecase"))
-    else
-        return {}, -math.huge
-    end
-end
-
-function ido.internal.filter()
-    ido.state.completion = nil
-    local query = ido.internal.query()
-
-    if #query > 0 then
-        for _, item in ipairs(ido.state.items) do
-            local positions, score = ido.internal.match(query, item)
-
-            if score ~= -math.huge then
-                local last_match = positions[#positions] + 1
-
-                if not ido.state.completion then
-                    ido.state.completion = item:sub(last_match)
-                else
-                    while #ido.state.completion > 0 and not vim.startswith(item:sub(last_match), ido.state.completion) do
-                        ido.state.completion = ido.state.completion:sub(1, -2)
-                    end
-                end
-
-                table.insert(ido.state.results, {item, score, positions})
-            end
-        end
-
-        table.sort(ido.state.results, function (lhs, rhs) return lhs[2] > rhs[2] end)
-    else
-        for _, item in ipairs(ido.state.items) do
-            table.insert(ido.state.results, {item, math.huge, {}})
-        end
-    end
-
-    if not ido.state.completion then
-        ido.state.completion = ""
-    end
-end
-
-function ido.internal.keystring(key, inside)
-    if type(key) == "number" then
-        if key == 9 then
-            return inside and "tab" or "<tab>"
-        elseif key == 13 then
-            return inside and "cr" or "<cr>"
-        elseif key == 27 then
-            return inside and "esc" or "<esc>"
-        elseif key <= 26 then
-            assert(not inside)
-            return "<c-"..string.char(("a"):byte() + key - 1)..">"
-        else
-            return string.char(key)
-        end
-    end
-
-    if key == "€kb" then
-        return inside and "bs" or "<bs>"
-    elseif key == "€kD" then
-        return inside and "del" or "<del>"
-    else
-        key = key:sub(4)
-
-        if #key == 1 then
-            key = key:byte()
-        end
-
-        assert(not inside)
-        return "<a-"..ido.internal.keystring(key, true)..">"
-    end
-end
-
-function ido.stop()
-    ido.state.active = false
-    ido.state.current = nil
-end
-
-function ido.done()
-    ido.state.active = false
-
-    if #ido.state.results > 0 then
-        ido.state.current = ido.state.results[ido.state.current][1]
-    elseif ido.internal.get("accept_query") then
-        ido.state.current = ido.internal.query()
-    else
-        ido.state.current = nil
-    end
-end
-
-function ido.done_query()
-    ido.state.active = false
-    ido.state.current = ido.internal.query()
+  ido.buffer[name] = buffer
+  ido.window[name] = window
 end
 
 function ido.next()
-    if ido.state.current < #ido.state.results then
-        ido.state.current = ido.state.current + 1
-    else
-        ido.state.current = 1
-    end
+  local cursor = vim.api.nvim_win_get_cursor(ido.window.items)
+
+  if cursor[1] == vim.api.nvim_buf_line_count(ido.buffer.items) then
+    cursor[1] = 1
+  else
+    cursor[1] = cursor[1] + 1
+  end
+
+  vim.api.nvim_win_set_cursor(ido.window.items, cursor)
 end
 
 function ido.prev()
-    if ido.state.current > 1 then
-        ido.state.current = ido.state.current - 1
+  local cursor = vim.api.nvim_win_get_cursor(ido.window.items)
+
+  if cursor[1] == 1 then
+    cursor[1] = vim.api.nvim_buf_line_count(ido.buffer.items)
+  else
+    cursor[1] = cursor[1] - 1
+  end
+
+  vim.api.nvim_win_set_cursor(ido.window.items, cursor)
+end
+
+function ido.exit()
+  ido.active = false
+
+  vim.cmd("stopinsert")
+  vim.fn.win_gotoid(ido.last)
+  vim.api.nvim_buf_delete(ido.buffer.query, {force = true})
+  vim.api.nvim_buf_delete(ido.buffer.items, {force = true})
+end
+
+function ido.get_item()
+  local line = vim.api.nvim_win_get_cursor(ido.window.items)[1]
+  return vim.api.nvim_buf_get_lines(ido.buffer.items, line - 1, line, false)[1]
+end
+
+function ido.get_query()
+  return vim.api.nvim_buf_get_lines(ido.buffer.query, 0, 1, false)[1]
+end
+
+function ido.accept_item()
+  local item = ido.get_item()
+
+  if item == "" then
+    item = ido.get_query()
+  end
+
+  ido.exit()
+  ido.accept(item)
+end
+
+function ido.accept_query()
+  local item = ido.get_query()
+  ido.exit()
+  ido.accept(item)
+end
+
+function ido.bind(binds)
+  if ido.active then
+    if vim.keymap then
+      for key, func in pairs(binds) do
+        vim.keymap.set("i", key, func, {buffer = ido.buffer.query})
+      end
     else
-        ido.state.current = #ido.state.results
+      for key, func in pairs(binds) do
+        table.insert(ido.bindings, func)
+        vim.api.nvim_buf_set_keymap(ido.buffer.query, "i", key,
+          "<c-o>:lua require('ido').bindings["..#ido.bindings.."]()<cr>",
+          {silent = true, noremap = true})
+      end
     end
+  else
+    for key, func in pairs(binds) do
+      ido.mappings[key] = func
+    end
+  end
 end
 
-function ido.complete()
-    ido.state.query.lhs = ido.state.query.lhs..ido.state.completion
+function ido.match()
+  local query = ido.get_query()
+  if query == "" then
+    vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
+    return
+  end
+
+  local matches = fzy.filter(query, ido.items)
+  table.sort(matches, function (a, b) return a[3] > b[3] end)
+
+  vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false,
+    vim.tbl_map(function (e) return e[1] end, matches))
+
+  vim.api.nvim_buf_clear_namespace(ido.buffer.items, ido.highlights, 0, -1)
+  for line, match in ipairs(matches) do
+    for _, position in ipairs(match[2]) do
+      vim.api.nvim_buf_add_highlight(
+        ido.buffer.items, ido.highlights, "IncSearch",
+        line - 1, position - 1, position)
+    end
+  end
+
+  vim.api.nvim_win_set_cursor(ido.window.items, {1, 0})
 end
 
-function ido.start(items, init, state)
-    ido.state = vim.tbl_extend("force", {
-        active = true,
-        items = items,
-        query = {lhs = "", rhs = ""},
-        modified = true,
-        options = init
-    }, state or {})
+function ido.title(title)
+  ido.window.opts.title = " "..title.." "
+  vim.api.nvim_win_set_config(ido.window.query, ido.window.opts)
+end
 
-    vim.opt.guicursor:remove("a:Cursor")
-    vim.opt.guicursor:append("a:IdoHideCursor")
+function ido.start(items, accept, title)
+  ido.last = vim.fn.win_getid()
+  ido.items = items
+  ido.active = true
+  ido.accept = accept
 
-    local init = ido.internal.get("render").init
-    if init then
-        init()
+  local width = vim.api.nvim_get_option("columns")
+  local height = vim.api.nvim_get_option("lines")
+
+  ido.window.opts = {
+    style = "minimal",
+    border = "single",
+    relative = "editor",
+
+    row = math.ceil(height * 0.1) + 1,
+    col = math.ceil(width * 0.15),
+    width = math.ceil(width * 0.7),
+    height = math.ceil(height * 0.8) - 3
+  }
+
+  ido.open("items")
+  vim.api.nvim_win_set_option(ido.window.items, "cursorline", true)
+
+  ido.window.opts.row = ido.window.opts.row - 3
+  ido.window.opts.height = 1
+
+  if title then
+    ido.window.opts.title = " "..title.." "
+    ido.window.opts.title_pos = "center"
+
+    if not pcall(ido.open, "query") then
+      ido.title = function () end
+      ido.window.opts.title = nil
+      ido.window.opts.title_pos = nil
+      ido.open("query")
     end
+  else
+    ido.open("query")
+  end
 
-    ido.internal.hook("event_start")
-    while ido.state.active do
-        if ido.state.modified then
-            ido.state.current = 1
-            ido.state.results = {}
-            ido.state.modified = false
-            ido.internal.hook("filter_items")
-            ido.internal.get("filter")()
+  ido.highlights = vim.api.nvim_create_namespace("")
+
+  vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
+  vim.api.nvim_buf_attach(ido.buffer.query, true, {
+    on_lines = function ()
+      vim.defer_fn(function ()
+        ido.match()
+      end, 0)
+    end,
+
+    on_detach = function ()
+      vim.defer_fn(function ()
+        if vim.api.nvim_buf_is_valid(ido.buffer.items) then
+          vim.api.nvim_buf_delete(ido.buffer.items, {force = true})
         end
-
-        ido.internal.get("render").draw(ido.internal.get("prompt"), ido.state)
-
-        local ok, key = pcall(vim.fn.getchar)
-
-        if ok then
-            local action = ido.internal.key(ido.internal.keystring(key))
-            if action then
-                action()
-            elseif type(key) == "number" and key >= 32 and key <= 126 then
-                ido.internal.insert(string.char(key))
-            end
-        else
-            ido.state.active = false
-            ido.state.current = nil
-        end
+      end, 0)
     end
-    ido.internal.hook("event_stop")
+  })
 
-    local exit = ido.internal.get("render").exit
-    if exit then
-        exit()
-    end
+  vim.cmd("startinsert")
 
-    vim.opt.guicursor:remove("a:IdoHideCursor")
-    vim.opt.guicursor:append("a:Cursor")
+  if not vim.keymap then
+    ido.bindings = {}
+  end
 
-    return ido.state.current
+  ido.bind(ido.mappings)
 end
 
-function ido.escape(combo)
-    local init = combo:len() - 1
-    assert(init > 0, "escape combination must be atleast 2 characters long")
+ido.bind {
+  ["<c-c>"] = ido.exit,
+  ["<esc>"] = ido.exit,
+  ["<tab>"] = ido.next,
+  ["<s-tab>"] = ido.prev,
 
-    local last = combo:sub(-1)
-    ido.options.mappings[last] = function ()
-        if ido.state.query.lhs:len() >= init and ido.state.query.lhs:sub(-init) == combo:sub(1, -2) then
-            ido.stop()
-        else
-            ido.internal.insert(last)
-        end
-    end
-end
-
-ido.setup {
-    prompt = ">>> ",
-
-    ignorecase = vim.o.ignorecase,
-
-    filter = ido.internal.filter,
-
-    render = require("ido.render").default,
-
-    mappings = {
-        ["<tab>"] = ido.complete,
-        ["<esc>"] = ido.stop,
-        ["<cr>"] = ido.done,
-        ["<c-j>"] = ido.done_query,
-
-        ["<bs>"] = ido.delete.char.backward,
-        ["<del>"] = ido.delete.char.forward,
-
-        ["<c-k>"] = ido.delete.line.forward,
-        ["<c-w>"] = ido.delete.word.backward,
-        ["<c-d>"] = ido.delete.char.forward,
-
-        ["<c-f>"] = ido.motion.char.forward,
-        ["<c-b>"] = ido.motion.char.backward,
-
-        ["<a-f>"] = ido.motion.word.forward,
-        ["<a-b>"] = ido.motion.word.backward,
-
-        ["<a-d>"] = ido.delete.word.forward,
-        ["<a-bs>"] = ido.delete.word.backward,
-
-        ["<c-a>"] = ido.motion.line.backward,
-        ["<c-e>"] = ido.motion.line.forward,
-
-        ["<c-n>"] = ido.next,
-        ["<c-p>"] = ido.prev,
-    },
-
-    hooks = {}
+  ["<cr>"] = ido.accept_item,
+  ["<c-j>"] = ido.accept_query,
 }
+
+function ido.utils.in_git()
+  return os.execute("git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null") == 0
+end
+
+function ido.utils.path_short(path, pwd)
+  if path == pwd then
+    path = "."
+  end
+
+  if not vim.endswith(pwd, "/") then
+    pwd = pwd.."/"
+  end
+
+  if vim.startswith(path, pwd) then
+    path = path:sub(#pwd + 1)
+  end
+
+  if vim.startswith(path, vim.env.HOME) then
+    path = "~"..path:sub(#vim.env.HOME + 1)
+  end
+
+  return path
+end
+
+function ido.browse()
+  local pwd = vim.loop.cwd()
+  local cwd = pwd
+
+  local function list()
+    return vim.fn.systemlist("ls -Apv "..vim.fn.shellescape(cwd))
+  end
+
+  local function sync()
+    ido.title("Browse: "..cwd)
+    vim.api.nvim_buf_set_lines(ido.buffer.query, 0, -1, false, {})
+
+    ido.items = list()
+    ido.match()
+  end
+
+  local function join(a, b)
+    local final = a.."/"..b
+    if final:sub(1, 2) == "//" then
+      final = final:sub(2)
+    end
+    return final
+  end
+
+  ido.start(list(), function (file)
+    vim.cmd("edit "..ido.utils.path_short(join(cwd, file), pwd))
+  end, "Browse: "..cwd)
+
+  ido.bind {
+    ["<a-l>"] = function ()
+      local item = ido.get_item()
+      if item:sub(-1) == "/" then
+        cwd = join(cwd, item:sub(1, -2))
+        sync()
+      end
+    end,
+
+    ["<a-h>"] = function ()
+      cwd = cwd:sub(1, cwd:find("/[^/]*$") - 1)
+      if cwd == "" then
+        cwd = "/"
+      end
+      sync()
+    end
+  }
+end
+
+function ido.buffers()
+  local cwd = vim.loop.cwd()
+  local current = vim.api.nvim_win_get_buf(0)
+  local buffers = {}
+
+  for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
+    if buffer ~= current and vim.api.nvim_buf_is_loaded(buffer) then
+      local name = vim.api.nvim_buf_get_name(buffer)
+      if name ~= "" then
+        table.insert(buffers, ido.utils.path_short(name, cwd))
+      end
+    end
+  end
+
+  current = vim.api.nvim_buf_get_name(current)
+  if current ~= "" then
+    table.insert(buffers, ido.utils.path_short(current, cwd))
+  end
+
+  ido.start(buffers, function (buffer) vim.cmd("buffer "..buffer) end, "Buffers")
+end
+
+function ido.git_files()
+  if not ido.utils.in_git() then
+    ido.browse()
+    return
+  end
+
+  ido.start(
+    vim.fn.systemlist("git ls-files --cached --others --exclude-standard"),
+    function (file) vim.cmd("edit "..file) end, "Git Files")
+end
+
+function ido.git_grep()
+  if not ido.utils.in_git() then
+    vim.api.nvim_err_writeln("ido: working directory does not belong to a Git repository")
+    return
+  end
+
+  local query = vim.fn.input("Git Grep: ")
+  if query == "" then
+    return nil
+  end
+
+  local matches = vim.fn.systemlist("git grep -inI --untracked "..
+    vim.fn.shellescape(query))
+
+  ido.start(matches, function (match)
+    match = vim.split(match, ":")
+    vim.cmd("edit "..match[1])
+
+    match = tonumber(match[2])
+
+    local col = vim.api.nvim_buf_get_lines(0, match - 1, match, false)[1]
+      :find(query)
+
+    vim.api.nvim_win_set_cursor(0, {match, col})
+  end, "Git Grep")
+end
+
+function ido.man_pages()
+  ido.start(require("man").man_complete("*", "Man *"), function (page)
+    vim.cmd("Man "..page)
+  end, "Manpages")
+end
+
+function ido.helptags()
+  local langs = {"en"}
+  local langs_map = {en = true}
+  local tag_files = {}
+  local function add_tag_file(lang, file)
+    if langs_map[lang] then
+      if tag_files[lang] then
+        table.insert(tag_files[lang], file)
+      else
+        tag_files[lang] = {file}
+      end
+    end
+  end
+
+  local function path_tail(path)
+    for i = #path, 1, -1 do
+      if path:sub(i, i) == "/" then
+        return path:sub(i + 1, -1)
+      end
+    end
+    return path
+  end
+
+  local help_files = {}
+  local all_files = vim.api.nvim_get_runtime_file("doc/*", true)
+  for _, fullpath in ipairs(all_files) do
+    local file = path_tail(fullpath)
+    if file == "tags" then
+      add_tag_file("en", fullpath)
+    elseif file:match "^tags%-..$" then
+      local lang = file:sub(-2)
+      add_tag_file(lang, fullpath)
+    else
+      help_files[file] = fullpath
+    end
+  end
+
+  local tags = {}
+  local tags_map = {}
+  local delimiter = string.char(9)
+  for _, lang in ipairs(langs) do
+    for _, file in ipairs(tag_files[lang] or {}) do
+      local lines = vim.fn.readfile(file)
+      for _, line in ipairs(lines) do
+        if not line:match "^!_TAG_" then
+          local fields = vim.split(line, delimiter, true)
+          if #fields == 3 and not tags_map[fields[1]] then
+            if fields[1] ~= "help-tags" or fields[2] ~= "tags" then
+              table.insert(tags, fields[1])
+              tags_map[fields[1]] = true
+            end
+          end
+        end
+      end
+    end
+  end
+
+  ido.start(tags, function (tag) vim.cmd("help "..tag) end, "Helptags")
+end
 
 return ido
