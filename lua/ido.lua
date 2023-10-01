@@ -157,19 +157,11 @@ function ido.start(items, accept, title)
   ido.window.opts.height = 1
   ido.window.opts.border = {"╭", "─" ,"╮", "│", "┤", "─", "├", "│"}
 
-  if title then
+  if title and vim.fn.hlexists("FloatTitle") == 1 then
     ido.window.opts.title = " "..title.." "
     ido.window.opts.title_pos = "center"
-
-    if not pcall(ido.open, "query") then
-      ido.title = function () end
-      ido.window.opts.title = nil
-      ido.window.opts.title_pos = nil
-      ido.open("query")
-    end
-  else
-    ido.open("query")
   end
+  ido.open("query")
 
   ido.highlights = vim.api.nvim_create_namespace("")
 
