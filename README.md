@@ -4,8 +4,8 @@ An Emacs inspired narrowing system for Neovim
 ![Demo](demo.png)
 
 ## Install
-```lua
-use "ido-nvim/ido.nvim"
+```vim
+Plug 'shoumodip/ido.nvim'
 ```
 
 ## Basic Usage
