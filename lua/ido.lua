@@ -141,10 +141,10 @@ function ido.start(items, accept, title)
 
   ido.window.opts = {
     style = "minimal",
-    border = "single",
+    border = "rounded",
     relative = "editor",
 
-    row = math.ceil(height * 0.1) + 1,
+    row = math.ceil(height * 0.1),
     col = math.ceil(width * 0.15),
     width = math.ceil(width * 0.7),
     height = math.ceil(height * 0.8) - 3
@@ -153,8 +153,9 @@ function ido.start(items, accept, title)
   ido.open("items")
   vim.api.nvim_win_set_option(ido.window.items, "cursorline", true)
 
-  ido.window.opts.row = ido.window.opts.row - 3
+  ido.window.opts.row = ido.window.opts.row - 2
   ido.window.opts.height = 1
+  ido.window.opts.border = {"╭", "─" ,"╮", "│", "┤", "─", "├", "│"}
 
   if title then
     ido.window.opts.title = " "..title.." "
