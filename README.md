@@ -1,7 +1,7 @@
 # ido.nvim
-An Emacs inspired narrowing system for Neovim
+Simple fuzzy searcher for Neovim
 
-![Demo](demo.png)
+![Ido](ido.png)
 
 ## Install
 ```vim
