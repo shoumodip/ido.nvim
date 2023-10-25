@@ -46,6 +46,13 @@ Switch between buffers
 require("ido").buffers()
 ```
 
+## Colorschemes
+Switch between colorschemes
+
+```lua
+require("ido").colorschemes()
+```
+
 ## Git Files
 Open git files, default to Browser outside git repos
 

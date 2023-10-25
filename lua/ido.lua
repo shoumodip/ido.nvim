@@ -294,6 +294,11 @@ function ido.buffers()
   ido.start(buffers, function (buffer) vim.cmd("buffer "..buffer) end, "Buffers")
 end
 
+function ido.colorschemes()
+  local colors = vim.fn.getcompletion("", "color")
+  ido.start(colors, function (color) vim.cmd("colorscheme "..color) end, "Colorschemes")
+end
+
 function ido.git_files()
   if not ido.utils.in_git() then
     ido.browse()
