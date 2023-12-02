@@ -2,7 +2,8 @@ local ido = {
   utils = {},
   buffer = {},
   window = {},
-  mappings = {}
+  mappings = {},
+  registers = {}
 }
 
 local fzy = require("fzy.lua")
@@ -225,7 +226,20 @@ function ido.utils.path_short(path, pwd)
   return path
 end
 
-function ido.browse()
+function ido.register(name, func)
+  ido[name] = func
+  table.insert(ido.registers, name)
+end
+
+function ido.execute()
+  ido.start(ido.registers, function (name)
+    if type(ido[name]) == "function" then
+      vim.defer_fn(ido[name], 100)
+    end
+  end, "Execute")
+end
+
+ido.register("browse", function ()
   local pwd = vim.loop.cwd()
   local cwd = pwd
 
@@ -270,9 +284,9 @@ function ido.browse()
       sync()
     end
   }
-end
+end)
 
-function ido.buffers()
+ido.register("buffers", function ()
   local cwd = vim.loop.cwd()
   local current = vim.api.nvim_win_get_buf(0)
   local buffers = {}
@@ -292,14 +306,14 @@ function ido.buffers()
   end
 
   ido.start(buffers, function (buffer) vim.cmd("buffer "..buffer) end, "Buffers")
-end
+end)
 
-function ido.colorschemes()
+ido.register("colorschemes", function ()
   local colors = vim.fn.getcompletion("", "color")
   ido.start(colors, function (color) vim.cmd("colorscheme "..color) end, "Colorschemes")
-end
+end)
 
-function ido.git_files()
+ido.register("git_files", function ()
   if not ido.utils.in_git() then
     ido.browse()
     return
@@ -308,9 +322,9 @@ function ido.git_files()
   ido.start(
     vim.fn.systemlist("git ls-files --cached --others --exclude-standard"),
     function (file) vim.cmd("edit "..file) end, "Git Files")
-end
+end)
 
-function ido.git_grep()
+ido.register("git_grep", function ()
   if not ido.utils.in_git() then
     vim.api.nvim_err_writeln("ido: working directory does not belong to a Git repository")
     return
@@ -335,15 +349,15 @@ function ido.git_grep()
 
     vim.api.nvim_win_set_cursor(0, {match, col})
   end, "Git Grep")
-end
+end)
 
-function ido.man_pages()
-  ido.start(require("man").man_complete("*", "Man *"), function (page)
+ido.register("man_pages", function ()
+  ido.start(vim.fn.systemlist("man -k . | awk '{print $1 $2}'"), function (page)
     vim.cmd("Man "..page)
   end, "Manpages")
-end
+end)
 
-function ido.helptags()
+ido.register("helptags", function ()
   local langs = {"en"}
   local langs_map = {en = true}
   local tag_files = {}
@@ -401,6 +415,6 @@ function ido.helptags()
   end
 
   ido.start(tags, function (tag) vim.cmd("help "..tag) end, "Helptags")
-end
+end)
 
 return ido

@@ -27,6 +27,13 @@ end)
 | <kbd>\<tab\></kbd>   | Select next item     |
 | <kbd>\<s-tab\></kbd> | Select previous item |
 
+## Execute
+Execute registered ido functions, which are listed below
+
+```lua
+require("lua").execute()
+```
+
 ## Browse
 Navigate the filesystem
 
@@ -112,4 +119,38 @@ ido.bind {
 ## Custom Window Title
 ```lua
 require("ido").start({"red", "green", "blue"}, print, "Select Colors")
+```
+
+## Custom Registered Function
+Registered functions show up in the `ido.execute` selector as well as in the
+`ido` namespace
+
+```lua
+local ido = require("ido")
+
+ido.register("lines", function ()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  for i in ipairs(lines) do
+    lines[i] = i..": "..lines[i]
+  end
+
+  ido.start(lines, function (line)
+    local index = line:find(":")
+    if index then
+      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+    end
+  end, "Lines")
+end)
+```
+
+This function can now be called with both the following ways
+
+```lua
+require("ido").lines()
+```
+
+OR
+
+```lua
+require("ido").execute()
 ```
