@@ -282,6 +282,15 @@ ido.register("browse", function ()
         cwd = "/"
       end
       sync()
+    end,
+
+    ["<a-o>"] = function ()
+      ido.exit()
+      if vim.loop.chdir(cwd) == 0 then
+        vim.print("ido: changed working directory to '"..cwd.."'")
+      else
+        vim.api.nvim_err_writeln("ido: could not change working directory to '"..cwd.."'")
+      end
     end
   }
 end)
@@ -332,7 +341,7 @@ ido.register("git_grep", function ()
 
   local query = vim.fn.input("Git Grep: ")
   if query == "" then
-    return nil
+    return
   end
 
   local matches = vim.fn.systemlist("git grep -inI --untracked "..

@@ -41,10 +41,11 @@ Navigate the filesystem
 require("ido").browse()
 ```
 
-| Key                  | Description          |
-| -------------------- | -------------------- |
-| <kbd>\<a-l\></kbd>   | Enter directory      |
-| <kbd>\<a-h\></kbd>   | Parent directory     |
+| Key                  | Description                        |
+| -------------------- | ---------------------------------- |
+| <kbd>\<a-l\></kbd>   | Enter directory                    |
+| <kbd>\<a-h\></kbd>   | Parent directory                   |
+| <kbd>\<a-o\></kbd>   | Change directory to current active |
 
 ## Buffers
 Switch between buffers
