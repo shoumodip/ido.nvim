@@ -75,6 +75,17 @@ Search patterns in git repos
 require("ido").git_grep()
 ```
 
+## Projects
+Switch to a project within a directory and run Git Files (optional)
+
+```lua
+require("ido").projects("~/Git") -- Projects base path of choice
+
+-- OR --
+
+require("ido").projects()        -- Select projects base path via input prompt
+```
+
 ## Man Pages
 Open man pages
 

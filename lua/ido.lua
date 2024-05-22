@@ -360,6 +360,29 @@ ido.register("git_grep", function ()
   end, "Git Grep")
 end)
 
+ido.register("projects", function (base)
+  if base == nil or base == "" then
+    base = vim.fn.input("Base: ", "", "file")
+  end
+
+  if base == nil or base == "" then
+    return
+  end
+
+  base = vim.fn.expand(base)
+  vim.print(base)
+  ido.start(vim.fn.systemlist("ls "..base), function (project)
+    local path = base.."/"..project
+    if vim.loop.chdir(path) == 0 then
+      if ido.utils.in_git() then
+        vim.defer_fn(ido.git_files, 100)
+      end
+    else
+      vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
+    end
+  end)
+end)
+
 ido.register("man_pages", function ()
   ido.start(vim.fn.systemlist("man -k . | awk '{print $1 $2}'"), function (page)
     vim.cmd("Man "..page)
