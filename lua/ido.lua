@@ -168,11 +168,9 @@ function ido.start(items, accept, title)
 
   vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
   vim.api.nvim_buf_attach(ido.buffer.query, true, {
-    on_lines = function ()
-      vim.defer_fn(function ()
-        ido.match()
-      end, 0)
-    end,
+    on_lines = vim.schedule_wrap(function ()
+      vim.defer_fn(ido.match, 0)
+    end),
 
     on_detach = function ()
       vim.defer_fn(function ()
