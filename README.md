@@ -76,7 +76,7 @@ require("ido").git_grep()
 ```
 
 ## Projects
-Switch to a project within a directory and run Git Files (optional)
+Switch to a project within a directory
 
 ```lua
 require("ido").projects("~/Git") -- Projects base path of choice
