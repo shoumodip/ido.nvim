@@ -372,13 +372,11 @@ ido.register("projects", function (base)
   ido.start(vim.fn.systemlist("ls "..base), function (project)
     local path = base.."/"..project
     if vim.loop.chdir(path) == 0 then
-      if ido.utils.in_git() then
-        vim.defer_fn(ido.git_files, 100)
-      end
+      print("ido: opened project '"..path.."'")
     else
       vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
     end
-  end)
+  end, "Projects")
 end)
 
 ido.register("man_pages", function ()
