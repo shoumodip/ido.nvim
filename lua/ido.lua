@@ -301,7 +301,7 @@ ido.register("browse", function ()
 
     ["<a-o>"] = function ()
       ido.exit()
-      if pcall(vim.fn.chdir, cwd) then
+      if pcall(vim.cmd, "cd "..cwd) then
         print("ido: changed working directory to '"..cwd.."'")
       else
         vim.api.nvim_err_writeln("ido: could not change working directory to '"..cwd.."'")
@@ -312,21 +312,26 @@ end)
 
 ido.register("buffers", function ()
   local cwd = vim.loop.cwd()
-  local current = vim.api.nvim_win_get_buf(0)
   local buffers = {}
+  local current = vim.api.nvim_get_current_buf()
 
-  for _, buffer in ipairs(vim.api.nvim_list_bufs()) do
-    if buffer ~= current and vim.api.nvim_buf_is_loaded(buffer) then
-      local name = vim.api.nvim_buf_get_name(buffer)
-      if name ~= "" then
-        table.insert(buffers, ido.utils.path_short(name, cwd))
-      end
+  for _, item in ipairs(vim.fn.getbufinfo({buflisted = true})) do
+    if item.bufnr ~= current then
+      table.insert(buffers, {ido.utils.path_short(item.name, cwd), item.lastused})
     end
   end
 
-  current = vim.api.nvim_buf_get_name(current)
+  table.sort(buffers, function (a, b)
+    return a[2] > b[2]
+  end)
+
+  for i, buffer in ipairs(buffers) do
+    buffers[i] = buffer[1]
+  end
+
+  current = ido.utils.path_short(vim.api.nvim_buf_get_name(current), cwd)
   if current ~= "" then
-    table.insert(buffers, ido.utils.path_short(current, cwd))
+    table.insert(buffers, current)
   end
 
   ido.start(buffers, function (buffer) vim.cmd("buffer "..buffer) end, "Buffers")
@@ -387,7 +392,7 @@ ido.register("projects", function (base)
   base = vim.fn.expand(base)
   ido.start(vim.fn.systemlist("ls "..base), function (project)
     local path = base.."/"..project
-    if pcall(vim.fn.chdir, path) then
+    if pcall(vim.cmd, "cd "..path) then
       print("ido: changed working directory to '"..path.."'")
     else
       vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
