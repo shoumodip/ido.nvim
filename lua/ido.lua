@@ -7,12 +7,20 @@ local ido = {
 }
 
 local fzy = require("fzy.lua")
+local title_possible = true
 
 function ido.open(name)
   local buffer = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
 
-  local window = vim.api.nvim_open_win(buffer, true, ido.window.opts)
+  local ok, window = pcall(vim.api.nvim_open_win, buffer, true, ido.window.opts)
+  if not ok then
+    title_possible = false
+    ido.window.opts.title = nil
+    ido.window.opts.title_pos = nil
+    window = vim.api.nvim_open_win(buffer, true, ido.window.opts)
+  end
+
   vim.api.nvim_win_set_option(window, "wrap", false)
   vim.api.nvim_win_set_option(window,
     "winhighlight", "Normal:Normal,FloatBorder:WinSeparator")
@@ -127,8 +135,10 @@ function ido.match()
 end
 
 function ido.title(title)
-  ido.window.opts.title = " "..title.." "
-  vim.api.nvim_win_set_config(ido.window.query, ido.window.opts)
+  if title_possible then
+    ido.window.opts.title = " "..title.." "
+    vim.api.nvim_win_set_config(ido.window.query, ido.window.opts)
+  end
 end
 
 function ido.start(items, accept, title)
@@ -158,7 +168,7 @@ function ido.start(items, accept, title)
   ido.window.opts.height = 1
   ido.window.opts.border = {"╭", "─" ,"╮", "│", "┤", "─", "├", "│"}
 
-  if title and vim.fn.hlexists("FloatTitle") == 1 then
+  if title_possible and title then
     ido.window.opts.title = " "..title.." "
     ido.window.opts.title_pos = "center"
   end
@@ -284,7 +294,7 @@ ido.register("browse", function ()
 
     ["<a-o>"] = function ()
       ido.exit()
-      if vim.loop.chdir(cwd) == 0 then
+      if pcall(vim.fn.chdir, cwd) then
         vim.print("ido: changed working directory to '"..cwd.."'")
       else
         vim.api.nvim_err_writeln("ido: could not change working directory to '"..cwd.."'")
@@ -371,8 +381,8 @@ ido.register("projects", function (base)
   vim.print(base)
   ido.start(vim.fn.systemlist("ls "..base), function (project)
     local path = base.."/"..project
-    if vim.loop.chdir(path) == 0 then
-      print("ido: opened project '"..path.."'")
+    if pcall(vim.fn.chdir, path) then
+      print("ido: changed working directory to '"..path.."'")
     else
       vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
     end
