@@ -295,7 +295,7 @@ ido.register("browse", function ()
     ["<a-o>"] = function ()
       ido.exit()
       if pcall(vim.fn.chdir, cwd) then
-        vim.print("ido: changed working directory to '"..cwd.."'")
+        print("ido: changed working directory to '"..cwd.."'")
       else
         vim.api.nvim_err_writeln("ido: could not change working directory to '"..cwd.."'")
       end
@@ -378,7 +378,6 @@ ido.register("projects", function (base)
   end
 
   base = vim.fn.expand(base)
-  vim.print(base)
   ido.start(vim.fn.systemlist("ls "..base), function (project)
     local path = base.."/"..project
     if pcall(vim.fn.chdir, path) then
