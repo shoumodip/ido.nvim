@@ -7,20 +7,15 @@ local ido = {
 }
 
 local fzy = require("fzy.lua")
-local title_possible = true
+local version = vim.version().minor
+local redraw_needed = version < 7
+local title_possible = version >= 9
 
 function ido.open(name)
   local buffer = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
 
-  local ok, window = pcall(vim.api.nvim_open_win, buffer, true, ido.window.opts)
-  if not ok then
-    title_possible = false
-    ido.window.opts.title = nil
-    ido.window.opts.title_pos = nil
-    window = vim.api.nvim_open_win(buffer, true, ido.window.opts)
-  end
-
+  local window = vim.api.nvim_open_win(buffer, true, ido.window.opts)
   vim.api.nvim_win_set_option(window, "wrap", false)
   vim.api.nvim_win_set_option(window,
     "winhighlight", "Normal:Normal,FloatBorder:WinSeparator")
@@ -39,6 +34,9 @@ function ido.next()
   end
 
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
+  if redraw_needed then
+    vim.cmd("mode")
+  end
 end
 
 function ido.prev()
@@ -51,6 +49,9 @@ function ido.prev()
   end
 
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
+  if redraw_needed then
+    vim.cmd("mode")
+  end
 end
 
 function ido.exit()
