@@ -139,6 +139,8 @@ function ido.title(title)
   if title_possible then
     ido.window.opts.title = " "..title.." "
     vim.api.nvim_win_set_config(ido.window.query, ido.window.opts)
+  else
+    print(title)
   end
 end
 
@@ -169,9 +171,13 @@ function ido.start(items, accept, title)
   ido.window.opts.height = 1
   ido.window.opts.border = {"╭", "─" ,"╮", "│", "┤", "─", "├", "│"}
 
-  if title_possible and title then
-    ido.window.opts.title = " "..title.." "
-    ido.window.opts.title_pos = "center"
+  if title then
+    if title_possible then
+      ido.window.opts.title = " "..title.." "
+      ido.window.opts.title_pos = "center"
+    else
+      print(title)
+    end
   end
   ido.open("query")
 
