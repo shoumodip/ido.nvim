@@ -10,6 +10,7 @@ local fzy = require("fzy.lua")
 local version = vim.version().minor
 local redraw_needed = version < 7
 local title_possible = version >= 9
+local current_title = nil
 
 function ido.open(name)
   local buffer = vim.api.nvim_create_buf(false, true)
@@ -36,6 +37,9 @@ function ido.next()
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
   if redraw_needed then
     vim.cmd("mode")
+    if current_title then
+      print(current_title)
+    end
   end
 end
 
@@ -51,6 +55,9 @@ function ido.prev()
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
   if redraw_needed then
     vim.cmd("mode")
+    if current_title then
+      print(current_title)
+    end
   end
 end
 
@@ -136,6 +143,7 @@ function ido.match()
 end
 
 function ido.title(title)
+  current_title = title
   if title_possible then
     ido.window.opts.title = " "..title.." "
     vim.api.nvim_win_set_config(ido.window.query, ido.window.opts)
@@ -171,6 +179,7 @@ function ido.start(items, accept, title)
   ido.window.opts.height = 1
   ido.window.opts.border = {"╭", "─" ,"╮", "│", "┤", "─", "├", "│"}
 
+  current_title = title
   if title then
     if title_possible then
       ido.window.opts.title = " "..title.." "
