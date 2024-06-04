@@ -37,7 +37,7 @@ function ido.next()
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
   if redraw_needed then
     vim.cmd("mode")
-    if current_title then
+    if not title_possible and current_title then
       print(current_title)
     end
   end
@@ -55,7 +55,7 @@ function ido.prev()
   vim.api.nvim_win_set_cursor(ido.window.items, cursor)
   if redraw_needed then
     vim.cmd("mode")
-    if current_title then
+    if not title_possible and current_title then
       print(current_title)
     end
   end
