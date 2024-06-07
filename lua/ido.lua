@@ -387,6 +387,15 @@ ido.register("git_grep", function ()
 
     vim.api.nvim_win_set_cursor(0, {match, col})
   end, "Git Grep")
+
+  ido.bind {
+    ["<a-o>"] = function ()
+      local items = vim.api.nvim_buf_get_lines(ido.buffer.items, 0, -1, false)
+      vim.fn.setqflist({}, "r", {lines = items})
+
+      print("ido: saved matches to quickfix list")
+    end
+  }
 end)
 
 ido.register("projects", function (base)

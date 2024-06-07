@@ -75,6 +75,10 @@ Search patterns in git repos
 require("ido").git_grep()
 ```
 
+| Key                  | Description                       |
+| -------------------- | --------------------------------- |
+| <kbd>\<a-o\></kbd>   | Save matches to the quickfix list |
+
 ## Projects
 Switch to a project within a directory
 
