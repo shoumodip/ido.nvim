@@ -145,17 +145,19 @@ Registered functions show up in the `ido.execute` selector as well as in the
 local ido = require("ido")
 
 ido.register("lines", function ()
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  for i in ipairs(lines) do
-    lines[i] = i..": "..lines[i]
-  end
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    local max = #tostring(#lines)
 
-  ido.start(lines, function (line)
-    local index = line:find(":")
-    if index then
-      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+    for i in ipairs(lines) do
+        lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
     end
-  end, "Lines")
+
+    ido.start(lines, function (line)
+        local index = line:find(":")
+        if index then
+            vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+        end
+    end, "Lines")
 end)
 ```
 
