@@ -351,6 +351,34 @@ ido.register("colorschemes", function ()
   ido.start(colors, function (color) vim.cmd("colorscheme "..color) end, "Colorschemes")
 end)
 
+ido.register("lines", function ()
+    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    local path = vim.api.nvim_buf_get_name(0)
+    local max = #tostring(#lines)
+
+    for i in ipairs(lines) do
+        lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
+    end
+
+    ido.start(lines, function (line)
+        local index = line:find(":")
+        if index then
+            vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+        end
+    end, "Lines")
+
+    ido.bind {
+        ["<a-o>"] = function ()
+            local items = vim.tbl_map(function (line)
+                return path..":"..vim.trim(line)
+            end, vim.api.nvim_buf_get_lines(ido.buffer.items, 0, -1, false))
+            vim.fn.setqflist({}, "r", {lines = items})
+
+            print("ido: saved matches to quickfix list")
+        end
+    }
+end)
+
 ido.register("git_files", function ()
   if not ido.utils.in_git() then
     ido.browse()

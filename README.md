@@ -54,6 +54,17 @@ Switch between buffers
 require("ido").buffers()
 ```
 
+## Lines
+Search the lines of the current buffer
+
+```lua
+require("ido").lines()
+```
+
+| Key                  | Description                       |
+| -------------------- | --------------------------------- |
+| <kbd>\<a-o\></kbd>   | Save matches to the quickfix list |
+
 ## Colorschemes
 Switch between colorschemes
 
