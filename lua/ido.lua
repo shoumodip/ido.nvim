@@ -324,8 +324,17 @@ ido.register("buffers", function ()
   local buffers = {}
   local current = vim.api.nvim_get_current_buf()
 
+  local empties = {}
+  local empties_count = 1
+
   for _, item in ipairs(vim.fn.getbufinfo({buflisted = true})) do
-    if item.bufnr ~= current then
+    if item.name == "" then
+      local name = "[No Name #"..empties_count.."]"
+      table.insert(buffers, {name, item.lastused})
+
+      empties[name] = item.bufnr
+      empties_count = empties_count + 1
+    elseif item.bufnr ~= current then
       table.insert(buffers, {ido.utils.path_short(item.name, cwd), item.lastused})
     end
   end
@@ -343,7 +352,13 @@ ido.register("buffers", function ()
     table.insert(buffers, current)
   end
 
-  ido.start(buffers, function (buffer) vim.cmd("buffer "..buffer) end, "Buffers")
+  ido.start(buffers, function (buffer)
+    if empties[buffer] then
+      vim.api.nvim_set_current_buf(empties[buffer])
+    else
+      vim.cmd("buffer "..buffer)
+    end
+  end, "Buffers")
 end)
 
 ido.register("colorschemes", function ()
