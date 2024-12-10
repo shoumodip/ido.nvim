@@ -321,42 +321,42 @@ end)
 
 ido.register("buffers", function ()
   local cwd = vim.loop.cwd()
+  local refs = {}
   local buffers = {}
-  local current = vim.api.nvim_get_current_buf()
-
-  local empties = {}
-  local empties_count = 1
+  local empties = 1
 
   for _, item in ipairs(vim.fn.getbufinfo({buflisted = true})) do
-    if item.name == "" then
-      local name = "[No Name #"..empties_count.."]"
-      table.insert(buffers, {name, item.lastused})
+    local name = item.name
+    if name == "" then
+      name = "[No Name #"..empties.."]"
+      empties = empties + 1
+    else
+      name = ido.utils.path_short(name, cwd)
+    end
 
-      empties[name] = item.bufnr
-      empties_count = empties_count + 1
-    elseif item.bufnr ~= current then
-      table.insert(buffers, {ido.utils.path_short(item.name, cwd), item.lastused})
+    refs[name] = item.bufnr
+    table.insert(buffers, {name, item.lastused})
+  end
+
+  local current = vim.api.nvim_get_current_buf()
+  for i, buffer in ipairs(buffers) do
+    if refs[buffer[1]] == current then
+      current = table.remove(buffers, i)
+      break
     end
   end
 
-  table.sort(buffers, function (a, b)
-    return a[2] > b[2]
-  end)
+  table.sort(buffers, function (a, b) return a[2] > b[2] end)
+  table.insert(buffers, current)
 
   for i, buffer in ipairs(buffers) do
     buffers[i] = buffer[1]
   end
 
-  current = ido.utils.path_short(vim.api.nvim_buf_get_name(current), cwd)
-  if current ~= "" then
-    table.insert(buffers, current)
-  end
-
   ido.start(buffers, function (buffer)
-    if empties[buffer] then
-      vim.api.nvim_set_current_buf(empties[buffer])
-    else
-      vim.cmd("buffer "..buffer)
+    local n = refs[buffer]
+    if n then
+      vim.api.nvim_set_current_buf(n)
     end
   end, "Buffers")
 end)
@@ -367,31 +367,31 @@ ido.register("colorschemes", function ()
 end)
 
 ido.register("lines", function ()
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    local path = vim.api.nvim_buf_get_name(0)
-    local max = #tostring(#lines)
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local path = vim.api.nvim_buf_get_name(0)
+  local max = #tostring(#lines)
 
-    for i in ipairs(lines) do
-        lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
+  for i in ipairs(lines) do
+    lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
+  end
+
+  ido.start(lines, function (line)
+    local index = line:find(":")
+    if index then
+      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
     end
+  end, "Lines")
 
-    ido.start(lines, function (line)
-        local index = line:find(":")
-        if index then
-            vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
-        end
-    end, "Lines")
+  ido.bind {
+    ["<a-o>"] = function ()
+      local items = vim.tbl_map(function (line)
+        return path..":"..vim.trim(line)
+      end, vim.api.nvim_buf_get_lines(ido.buffer.items, 0, -1, false))
+      vim.fn.setqflist({}, "r", {lines = items})
 
-    ido.bind {
-        ["<a-o>"] = function ()
-            local items = vim.tbl_map(function (line)
-                return path..":"..vim.trim(line)
-            end, vim.api.nvim_buf_get_lines(ido.buffer.items, 0, -1, false))
-            vim.fn.setqflist({}, "r", {lines = items})
-
-            print("ido: saved matches to quickfix list")
-        end
-    }
+      print("ido: saved matches to quickfix list")
+    end
+  }
 end)
 
 ido.register("git_files", function ()
