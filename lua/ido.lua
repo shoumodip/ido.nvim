@@ -294,8 +294,12 @@ ido.register("browse", function ()
   ido.bind {
     ["<a-l>"] = function ()
       local item = ido.get_item()
-      if item:sub(-1) == "/" then
-        cwd = join(cwd, item:sub(1, -2))
+      local new = join(cwd, item)
+      if vim.fn.isdirectory(new) ~= 0 then
+        cwd = new
+        if vim.endswith(cwd, "/") then
+          cwd = cwd:sub(1, -2)
+        end
         sync()
       end
     end,
