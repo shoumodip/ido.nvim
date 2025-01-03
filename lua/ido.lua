@@ -252,6 +252,11 @@ end
 
 function ido.register(name, func)
   ido[name] = func
+  for _, f in ipairs(ido.registers) do
+    if f == name then
+      return
+    end
+  end
   table.insert(ido.registers, name)
 end
 
