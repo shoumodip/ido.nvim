@@ -466,7 +466,8 @@ ido.register("projects", function (base)
 end)
 
 ido.register("man_pages", function ()
-  ido.start(vim.fn.systemlist("man -k . | awk '{print $1 $2}'"), function (page)
+  local complete = require("man").man_complete or vim.fn["man#complete"]
+  ido.start(complete("*", "Man *", 5), function (page)
     vim.cmd("Man "..page)
   end, "Manpages")
 end)
