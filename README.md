@@ -155,27 +155,39 @@ Registered functions show up in the `ido.execute` selector as well as in the
 ```lua
 local ido = require("ido")
 
-ido.register("lines", function ()
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    local max = #tostring(#lines)
+ido.register("lines_that_match", function ()
+  local query = vim.fn.input("Query: ")
+  if query == "" then
+    return
+  end
 
-    for i in ipairs(lines) do
-        lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local max = #tostring(#lines)
+
+  for i in ipairs(lines) do
+    lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
+  end
+
+  lines = vim.tbl_filter(
+    function (line)
+      return string.find(line, query, max + 2, true)
+    end,
+    lines
+  )
+
+  ido.start(lines, function (line)
+    local index = line:find(":")
+    if index then
+      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
     end
-
-    ido.start(lines, function (line)
-        local index = line:find(":")
-        if index then
-            vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
-        end
-    end, "Lines")
+  end, "Lines That Match")
 end)
 ```
 
 This function can now be called with both the following ways
 
 ```lua
-require("ido").lines()
+require("ido").lines_that_match()
 ```
 
 OR
