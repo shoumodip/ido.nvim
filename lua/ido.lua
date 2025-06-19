@@ -228,7 +228,7 @@ ido.bind {
 
 function ido.utils.in_git()
   vim.fn.system("git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null")
-  return vim.v.shell_error
+  return vim.v.shell_error == 0
 end
 
 function ido.utils.path_short(path, pwd)
