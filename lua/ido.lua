@@ -188,7 +188,9 @@ function ido.start(items, accept, title)
       print(title)
     end
   end
+
   ido.open("query")
+  vim.api.nvim_buf_set_var(ido.buffer.query, "completion", false)
 
   ido.highlights = vim.api.nvim_create_namespace("")
 
