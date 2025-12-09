@@ -12,6 +12,15 @@ local redraw_needed = version < 7
 local title_possible = version >= 9
 local current_title = nil
 
+function ido.select(line)
+  vim.api.nvim_win_set_cursor(ido.window.items, {line, 1})
+  if redraw_needed then
+    vim.api.nvim_set_current_win(ido.window.items)
+    vim.cmd("redraw")
+    vim.api.nvim_set_current_win(ido.window.query)
+  end
+end
+
 function ido.open(name)
   local buffer = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_option(buffer, "bufhidden", "wipe")
@@ -26,39 +35,23 @@ function ido.open(name)
 end
 
 function ido.next()
-  local cursor = vim.api.nvim_win_get_cursor(ido.window.items)
-
-  if cursor[1] == vim.api.nvim_buf_line_count(ido.buffer.items) then
-    cursor[1] = 1
+  local line = vim.api.nvim_win_get_cursor(ido.window.items)[1]
+  if line == vim.api.nvim_buf_line_count(ido.buffer.items) then
+    line = 1
   else
-    cursor[1] = cursor[1] + 1
+    line = line + 1
   end
-
-  vim.api.nvim_win_set_cursor(ido.window.items, cursor)
-  if redraw_needed then
-    vim.cmd("mode")
-    if not title_possible and current_title then
-      print(current_title)
-    end
-  end
+  ido.select(line)
 end
 
 function ido.prev()
-  local cursor = vim.api.nvim_win_get_cursor(ido.window.items)
-
-  if cursor[1] == 1 then
-    cursor[1] = vim.api.nvim_buf_line_count(ido.buffer.items)
+  local line = vim.api.nvim_win_get_cursor(ido.window.items)[1]
+  if line == 1 then
+    line = vim.api.nvim_buf_line_count(ido.buffer.items)
   else
-    cursor[1] = cursor[1] - 1
+    line = line - 1
   end
-
-  vim.api.nvim_win_set_cursor(ido.window.items, cursor)
-  if redraw_needed then
-    vim.cmd("mode")
-    if not title_possible and current_title then
-      print(current_title)
-    end
-  end
+  ido.select(line)
 end
 
 function ido.exit()
@@ -274,14 +267,21 @@ end
 ido.register("browse", function ()
   local pwd = vim.loop.cwd()
   local cwd = pwd
+  local history = {}
 
   local function list()
     return vim.fn.systemlist("ls -Apv "..vim.fn.shellescape(cwd))
   end
 
-  local function sync()
+  local function sync(dont_redraw)
     ido.title("Browse: "..cwd)
     vim.api.nvim_buf_set_lines(ido.buffer.query, 0, -1, false, {})
+
+    if dont_redraw then
+      vim.api.nvim_win_set_cursor(ido.window.items, {1, 1})
+    else
+      ido.select(1)
+    end
 
     ido.items = list()
     ido.match()
@@ -304,20 +304,40 @@ ido.register("browse", function ()
       local item = ido.get_item()
       local new = join(cwd, item)
       if vim.fn.isdirectory(new) ~= 0 then
+        history[cwd] = item
+
         cwd = new
         if vim.endswith(cwd, "/") then
           cwd = cwd:sub(1, -2)
         end
-        sync()
+
+        local prev = history[cwd]
+        if prev then
+          sync(true)
+          vim.api.nvim_buf_call(ido.buffer.items, function ()
+            vim.fn.search("^\\V"..prev.."\\M$" , "c")
+          end)
+        else
+          sync()
+        end
       end
     end,
 
     ["<a-h>"] = function ()
-      cwd = cwd:sub(1, cwd:find("/[^/]*$") - 1)
+      history[cwd] = ido.get_item()
+
+      local pivot = cwd:find("/[^/]*$")
+      local prev = cwd:sub(pivot + 1).."/"
+
+      cwd = cwd:sub(1, pivot - 1)
       if cwd == "" then
         cwd = "/"
       end
-      sync()
+
+      sync(true)
+      vim.api.nvim_buf_call(ido.buffer.items, function ()
+        vim.fn.search("^\\V"..prev.."\\M$" , "c")
+      end)
     end,
 
     ["<a-o>"] = function ()
@@ -428,19 +448,14 @@ ido.register("git_grep", function ()
     return
   end
 
-  local matches = vim.fn.systemlist("git grep -inI --untracked "..
+  local matches = vim.fn.systemlist("git grep -inI --column --untracked "..
     vim.fn.shellescape(query))
 
   ido.start(matches, function (match)
     match = vim.split(match, ":")
     vim.cmd("edit "..match[1])
-
-    match = tonumber(match[2])
-
-    local col = vim.api.nvim_buf_get_lines(0, match - 1, match, false)[1]
-      :find(query)
-
-    vim.api.nvim_win_set_cursor(0, {match, col})
+    vim.api.nvim_win_set_cursor(0, {tonumber(match[2]), tonumber(match[3])})
+    vim.cmd("normal! zz")
   end, "Git Grep")
 
   ido.bind {
@@ -451,6 +466,14 @@ ido.register("git_grep", function ()
       print("ido: saved matches to quickfix list")
     end
   }
+
+  vim.api.nvim_buf_call(ido.buffer.items, function ()
+    vim.cmd([[
+      syntax match Label '\f\+:\d\+:\d\+' contains=Number,Delimiter
+      syntax match Number '\d\+' contained
+      syntax match Delimiter ':' contained
+    ]])
+  end)
 end)
 
 ido.register("projects", function (base)

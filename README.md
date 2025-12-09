@@ -8,6 +8,8 @@ Simple fuzzy searcher for Neovim
 Plug 'shoumodip/ido.nvim'
 ```
 
+This plugin is backwards compatible till Neovim 0.5.0
+
 ## Basic Usage
 
 * `ido.start(items, callback, title)`
