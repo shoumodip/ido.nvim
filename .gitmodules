@@ -1,3 +1,0 @@
-[submodule "lua/fzy"]
-	path = lua/fzy
-	url = https://github.com/romgrk/fzy-lua-native.git
