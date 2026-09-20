@@ -74,6 +74,10 @@ Switch between colorschemes
 require("ido").colorschemes()
 ```
 
+| Key                  | Description                        |
+| -------------------- | ---------------------------------- |
+| <kbd>\<a-g\></kbd>   | Switch between light and dark mode |
+
 ## Git Files
 Open git files, default to Browser outside git repos
 

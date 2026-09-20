@@ -14,6 +14,10 @@ local current_title = nil
 
 function ido.select(line)
   vim.api.nvim_win_set_cursor(ido.window.items, {line, 1})
+  if ido.callbacks.select then
+    ido.callbacks.select(ido.get_item())
+  end
+
   if redraw_needed then
     vim.api.nvim_set_current_win(ido.window.items)
     vim.cmd("redraw")
@@ -54,13 +58,17 @@ function ido.prev()
   ido.select(line)
 end
 
-function ido.exit()
+function ido.exit(accepted)
   ido.active = false
 
   vim.cmd("stopinsert")
   vim.fn.win_gotoid(ido.last)
   vim.api.nvim_buf_delete(ido.buffer.query, {force = true})
   vim.api.nvim_buf_delete(ido.buffer.items, {force = true})
+
+  if ido.callbacks.cancel and not accepted then
+    ido.callbacks.cancel()
+  end
 end
 
 function ido.get_item()
@@ -79,7 +87,7 @@ function ido.accept_item()
     item = ido.get_query()
   end
 
-  ido.exit()
+  ido.exit(true)
   ido.accept(item)
 end
 
@@ -114,25 +122,28 @@ function ido.match()
   local query = ido.get_query()
   if query == "" then
     vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
-    return
-  end
+  else
+    local matches = fzy.filter(query, ido.items)
+    table.sort(matches, function (a, b) return a[3] > b[3] end)
 
-  local matches = fzy.filter(query, ido.items)
-  table.sort(matches, function (a, b) return a[3] > b[3] end)
-
-  vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false,
+    vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false,
     vim.tbl_map(function (e) return e[1] end, matches))
 
-  vim.api.nvim_buf_clear_namespace(ido.buffer.items, ido.highlights, 0, -1)
-  for line, match in ipairs(matches) do
-    for _, position in ipairs(match[2]) do
-      vim.api.nvim_buf_add_highlight(
-        ido.buffer.items, ido.highlights, "IncSearch",
-        line - 1, position - 1, position)
+    vim.api.nvim_buf_clear_namespace(ido.buffer.items, ido.highlights, 0, -1)
+    for line, match in ipairs(matches) do
+      for _, position in ipairs(match[2]) do
+        vim.api.nvim_buf_add_highlight(
+          ido.buffer.items, ido.highlights, "IncSearch",
+          line - 1, position - 1, position
+        )
+      end
     end
+    vim.api.nvim_win_set_cursor(ido.window.items, {1, 0})
   end
 
-  vim.api.nvim_win_set_cursor(ido.window.items, {1, 0})
+  if ido.callbacks.select then
+    ido.callbacks.select(ido.get_item())
+  end
 end
 
 function ido.title(title)
@@ -146,10 +157,15 @@ function ido.title(title)
 end
 
 function ido.start(items, accept, title)
+  ido.start_ex(items, title, {accept = accept})
+end
+
+function ido.start_ex(items, title, callbacks)
   ido.last = vim.fn.win_getid()
   ido.items = items
   ido.active = true
-  ido.accept = accept
+  ido.callbacks = callbacks or {}
+  ido.accept = ido.callbacks.accept or function () end
 
   local width = vim.api.nvim_get_option("columns")
   local height = vim.api.nvim_get_option("lines")
@@ -394,8 +410,56 @@ ido.register("buffers", function ()
 end)
 
 ido.register("colorschemes", function ()
+  local color_save = vim.g.colors_name
+  local background_save = vim.o.background
+
   local colors = vim.fn.getcompletion("", "color")
-  ido.start(colors, function (color) vim.cmd("colorscheme "..color) end, "Colorschemes")
+  for i, color in ipairs(colors) do
+    if color == color_save then
+      table.remove(colors, i)
+      table.insert(colors, 1, color_save)
+      break
+    end
+  end
+
+  local function title()
+    local background = vim.o.background
+    return string.format(
+      "Colorschemes (%s)",
+      background:sub(1, 1):upper()..background:sub(2)
+    )
+  end
+
+  local function colorscheme(color, title)
+    vim.cmd("colorscheme "..color)
+    if title then
+      ido.title(title)
+    end
+  end
+
+  ido.start_ex(colors, title(), {
+    accept = colorscheme,
+    cancel = function ()
+      vim.o.background = background_save
+      colorscheme(color_save)
+    end,
+    select = function (color)
+      colorscheme(color, title())
+    end
+  })
+
+  ido.bind {
+    ["<a-g>"] = function ()
+      if vim.o.background == "dark" then
+        vim.o.background = "light"
+      elseif vim.o.background == "light" then
+        vim.o.background = "dark"
+      else
+        error("Unreachable")
+      end
+      ido.title(title())
+    end
+  }
 end)
 
 ido.register("lines", function ()
