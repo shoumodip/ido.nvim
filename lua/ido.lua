@@ -433,7 +433,7 @@ ido.register("colorschemes", function ()
   local function colorscheme(color, title)
     vim.cmd("colorscheme "..color)
     if title then
-      ido.title(title)
+      ido.title(title())
     end
   end
 
@@ -444,7 +444,7 @@ ido.register("colorschemes", function ()
       colorscheme(color_save)
     end,
     select = function (color)
-      colorscheme(color, title())
+      colorscheme(color, title)
     end
   })
 
