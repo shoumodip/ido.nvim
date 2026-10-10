@@ -11,13 +11,14 @@ Plug 'shoumodip/ido.nvim'
 This plugin is backwards compatible till Neovim 0.5.0
 
 ## Basic Usage
-
-* `ido.start(items, callback, title)`
+* `ido.begin(items, title, callbacks)`
 
 ```lua
-require("ido").start({"red", "green", "blue"}, function (v)
-  print(v)
-end)
+require("ido").begin({"red", "green", "blue"}, "Colors", {
+  accept = function (v)
+    print(v)
+  end
+})
 ```
 
 | Key                  | Description          |
@@ -96,6 +97,17 @@ require("ido").git_grep()
 | -------------------- | --------------------------------- |
 | <kbd>\<a-o\></kbd>   | Save matches to the quickfix list |
 
+## Rg
+Search patterns using `rg` live
+
+```lua
+require("ido").rg()
+```
+
+| Key                  | Description                       |
+| -------------------- | --------------------------------- |
+| <kbd>\<a-o\></kbd>   | Save matches to the quickfix list |
+
 ## Projects
 Switch to a project within a directory
 
@@ -149,10 +161,15 @@ ido.bind {
 }
 ```
 
-## Custom Window Title
-```lua
-require("ido").start({"red", "green", "blue"}, print, "Select Colors")
-```
+## Callbacks
+### `accept(item)`
+This will be called whenever an item is accepted (Using the <kbd>\<cr\></kbd> key)
+
+### `select(item)`
+This will be called whenever an item is selected (Using the <kbd>\<tab\></kbd> or <kbd>\<s-tab\></kbd> keys)
+
+### `cancel(item)`
+This will be called whenever the selector is cancelled (Using the <kbd>\<esc\></kbd> or <kbd>\<c-c\></kbd> keys)
 
 ## Custom Registered Function
 Registered functions show up in the `ido.execute` selector as well as in the
@@ -181,12 +198,14 @@ ido.register("lines_that_match", function ()
     lines
   )
 
-  ido.start(lines, function (line)
-    local index = line:find(":")
-    if index then
-      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+  ido.begin(lines, "Lines That Match", {
+    accept = function (line)
+      local index = line:find(":")
+      if index then
+        vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+      end
     end
-  end, "Lines That Match")
+  })
 end)
 ```
 

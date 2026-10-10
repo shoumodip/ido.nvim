@@ -120,6 +120,15 @@ end
 
 function ido.match()
   local query = ido.get_query()
+  if type(ido.items) == "function" then
+    local lines = ido.items(query)
+    if lines then
+      vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, lines)
+    end
+    vim.api.nvim_win_set_cursor(ido.window.items, {1, 0})
+    return
+  end
+
   if query == "" then
     vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
   else
@@ -157,10 +166,11 @@ function ido.title(title)
 end
 
 function ido.start(items, accept, title)
-  ido.start_ex(items, title, {accept = accept})
+  vim.api.nvim_err_writeln("ido: ido.start() is deprecated, use ido.begin() instead")
+  vim.schedule(function () ido.begin(items, title, {accept = accept}) end)
 end
 
-function ido.start_ex(items, title, callbacks)
+function ido.begin(items, title, callbacks)
   ido.last = vim.fn.win_getid()
   ido.items = items
   ido.active = true
@@ -200,10 +210,14 @@ function ido.start_ex(items, title, callbacks)
 
   ido.open("query")
   vim.api.nvim_buf_set_var(ido.buffer.query, "completion", false)
-
   ido.highlights = vim.api.nvim_create_namespace("")
 
-  vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, ido.items)
+  local items = ido.items
+  if type(items) == "function" then
+    items = items("")
+  end
+  vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, items)
+
   vim.api.nvim_buf_attach(ido.buffer.query, true, {
     on_lines = vim.schedule_wrap(function ()
       vim.defer_fn(ido.match, 0)
@@ -273,11 +287,13 @@ function ido.register(name, func)
 end
 
 function ido.execute()
-  ido.start(ido.registers, function (name)
-    if type(ido[name]) == "function" then
-      vim.defer_fn(ido[name], 100)
+  ido.begin(ido.registers, "Execute", {
+    accept = function (name)
+      if type(ido[name]) == "function" then
+        vim.defer_fn(ido[name], 100)
+      end
     end
-  end, "Execute")
+  })
 end
 
 ido.register("browse", function ()
@@ -311,9 +327,11 @@ ido.register("browse", function ()
     return final
   end
 
-  ido.start(list(), function (file)
-    vim.cmd("edit "..ido.utils.path_short(join(cwd, file), pwd))
-  end, "Browse: "..cwd)
+  ido.begin(list(), "Browse: "..cwd, {
+    accept = function (file)
+      vim.cmd("edit "..ido.utils.path_short(join(cwd, file), pwd))
+    end}
+  )
 
   ido.bind {
     ["<a-l>"] = function ()
@@ -401,12 +419,14 @@ ido.register("buffers", function ()
     buffers[i] = buffer[1]
   end
 
-  ido.start(buffers, function (buffer)
-    local n = refs[buffer]
-    if n then
-      vim.api.nvim_set_current_buf(n)
+  ido.begin(buffers, "Buffers", {
+    accept = function (buffer)
+      local n = refs[buffer]
+      if n then
+        vim.api.nvim_set_current_buf(n)
+      end
     end
-  end, "Buffers")
+  })
 end)
 
 ido.register("colorschemes", function ()
@@ -437,7 +457,7 @@ ido.register("colorschemes", function ()
     end
   end
 
-  ido.start_ex(colors, title(), {
+  ido.begin(colors, title(), {
     accept = colorscheme,
     cancel = function ()
       vim.o.background = background_save
@@ -471,12 +491,14 @@ ido.register("lines", function ()
     lines[i] = string.rep(" ", max - #tostring(i))..i..": "..lines[i]
   end
 
-  ido.start(lines, function (line)
-    local index = line:find(":")
-    if index then
-      vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+  ido.begin(lines, "Lines", {
+    accept = function (line)
+      local index = line:find(":")
+      if index then
+        vim.api.nvim_win_set_cursor(0, {tonumber(line:sub(1, index - 1)), 0})
+      end
     end
-  end, "Lines")
+  })
 
   ido.bind {
     ["<a-o>"] = function ()
@@ -488,6 +510,13 @@ ido.register("lines", function ()
       print("ido: saved matches to quickfix list")
     end
   }
+
+  vim.api.nvim_buf_call(ido.buffer.items, function ()
+    vim.cmd([[
+      syntax match Number    '^ *\d\+:' contains=Delimiter
+      syntax match Delimiter ':' contained
+    ]])
+  end)
 end)
 
 ido.register("git_files", function ()
@@ -496,18 +525,22 @@ ido.register("git_files", function ()
     return
   end
 
-  ido.start(
-    vim.fn.systemlist("git ls-files --cached --others --exclude-standard"),
-    function (file) vim.cmd("edit "..file) end, "Git Files")
+  local files = vim.fn.systemlist("git ls-files --cached --others --exclude-standard")
+  ido.begin(files, "Git Files", {
+    accept = function (file) vim.cmd("edit "..file) end
+  })
 end)
 
-ido.register("git_grep", function ()
+ido.register("git_grep", function (query)
   if not ido.utils.in_git() then
     vim.api.nvim_err_writeln("ido: working directory does not belong to a Git repository")
     return
   end
 
-  local query = vim.fn.input("Git Grep: ")
+  if not query then
+    query = vim.fn.input("Git Grep: ")
+  end
+
   if query == "" then
     return
   end
@@ -515,12 +548,14 @@ ido.register("git_grep", function ()
   local matches = vim.fn.systemlist("git grep -inI --column --untracked "..
     vim.fn.shellescape(query))
 
-  ido.start(matches, function (match)
-    match = vim.split(match, ":")
-    vim.cmd("edit "..match[1])
-    vim.api.nvim_win_set_cursor(0, {tonumber(match[2]), tonumber(match[3])})
-    vim.cmd("normal! zz")
-  end, "Git Grep")
+    ido.begin(matches, "Git Grep", {
+      accept = function (match)
+        match = vim.split(match, ":")
+        vim.cmd("edit "..match[1])
+        vim.api.nvim_win_set_cursor(0, {tonumber(match[2]), tonumber(match[3])})
+        vim.cmd("normal! zz")
+      end
+    })
 
   ido.bind {
     ["<a-o>"] = function ()
@@ -533,9 +568,86 @@ ido.register("git_grep", function ()
 
   vim.api.nvim_buf_call(ido.buffer.items, function ()
     vim.cmd([[
-      syntax match Label '\f\+:\d\+:\d\+' contains=Number,Delimiter
-      syntax match Number '\d\+' contained
+      syntax match Label     '^\f\+:\d\+:\d\+:' contains=Number,Delimiter
       syntax match Delimiter ':' contained
+      syntax match Number    ':\d\+' contained contains=Delimiter
+    ]])
+  end)
+end)
+
+ido.register("rg", function ()
+  if vim.fn.executable("rg") ~= 1 then
+    vim.api.nvim_err_writeln("ido: the executable 'rg' is not available in PATH")
+    return
+  end
+
+  local case = ""
+  if vim.o.smartcase then
+    case = "-S"
+  elseif vim.o.ignorecase then
+    case = "-i"
+  else
+    case = "-s"
+  end
+
+  ido.begin(
+    function (query)
+      if query == "" then
+        return {}
+      end
+
+      local output = vim.fn.systemlist("rg "..case.." --json "..vim.fn.shellescape(query))
+      local linenr = 0
+
+      vim.api.nvim_buf_set_lines(ido.buffer.items, 0, -1, false, {})
+      vim.api.nvim_buf_clear_namespace(ido.buffer.items, ido.highlights, 0, -1)
+      for _, line in ipairs(output) do
+        local ok, ev = pcall(vim.json.decode, line)
+        if ok and ev.type == "match" then
+          for _, match in ipairs(ev.data.submatches) do
+            local location = ev.data.path.text..":"..ev.data.line_number..":"..(match["start"] + 1)..": "
+            vim.api.nvim_buf_set_lines(ido.buffer.items, linenr == 0 and 0 or -1, -1, false, {
+              location..ev.data.lines.text:sub(1, -2)
+            })
+
+            vim.api.nvim_buf_add_highlight(
+              ido.buffer.items, ido.highlights, "IncSearch",
+              linenr,
+              #location + tonumber(match["start"]),
+              #location + tonumber(match["end"])
+            )
+
+            linenr = linenr + 1
+          end
+        end
+      end
+
+      return
+    end,
+    "Rg",
+    {
+      accept = function (match)
+        match = vim.split(match, ":")
+        vim.cmd("edit "..match[1])
+        vim.api.nvim_win_set_cursor(0, {tonumber(match[2]), tonumber(match[3])})
+        vim.cmd("normal! zz")
+      end,
+    }
+  )
+
+  ido.bind {
+    ["<a-o>"] = function ()
+      local items = vim.api.nvim_buf_get_lines(ido.buffer.items, 0, -1, false)
+      vim.fn.setqflist({}, "r", {lines = items})
+      print("ido: saved matches to quickfix list")
+    end
+  }
+
+  vim.api.nvim_buf_call(ido.buffer.items, function ()
+    vim.cmd([[
+      syntax match Label     '^\f\+:\d\+:\d\+:' contains=Number,Delimiter
+      syntax match Delimiter ':' contained
+      syntax match Number    ':\d\+' contained contains=Delimiter
     ]])
   end)
 end)
@@ -550,21 +662,25 @@ ido.register("projects", function (base)
   end
 
   base = vim.fn.expand(base)
-  ido.start(vim.fn.systemlist("ls "..base), function (project)
-    local path = base.."/"..project
-    if pcall(vim.cmd, "cd "..path) then
-      print("ido: changed working directory to '"..path.."'")
-    else
-      vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
+  ido.begin(vim.fn.systemlist("ls "..base), "Projects", {
+    accept = function (project)
+      local path = base.."/"..project
+      if pcall(vim.cmd, "cd "..path) then
+        print("ido: changed working directory to '"..path.."'")
+      else
+        vim.api.nvim_err_writeln("ido: could not change working directory to '"..path.."'")
+      end
     end
-  end, "Projects")
+  })
 end)
 
 ido.register("man_pages", function ()
   local complete = require("man").man_complete or vim.fn["man#complete"]
-  ido.start(complete("*", "Man *", 5), function (page)
-    vim.cmd("Man "..page)
-  end, "Manpages")
+  ido.begin(complete("*", "Man *", 5), "Manpages", {
+    accept = function (page)
+      vim.cmd("Man "..page)
+    end
+  })
 end)
 
 ido.register("helptags", function ()
@@ -624,7 +740,7 @@ ido.register("helptags", function ()
     end
   end
 
-  ido.start(tags, function (tag) vim.cmd("help "..tag) end, "Helptags")
+  ido.begin(tags, "Helptags", {accept = function (tag) vim.cmd("help "..tag) end})
 end)
 
 return ido
