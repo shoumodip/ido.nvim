@@ -15,14 +15,16 @@ if vim.ui then
       prompt = prompt.." "
     end
 
-    local selected = require("ido").start(items, function (option)
-      if opts.format_item then
-        option = lookup[option]
-      end
+    local selected = require("ido").begin(items, prompt, {
+      accept = function (option)
+        if opts.format_item then
+          option = lookup[option]
+        end
 
-      if option then
-        accept(option)
+        if option then
+          accept(option)
+        end
       end
-    end, prompt)
+    })
   end
 end
